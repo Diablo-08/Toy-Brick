@@ -57,13 +57,15 @@ app.use(errorHandler);
 // Khởi chạy server
 const startServer = async () => {
   try {
-    await connectDB();
     app.listen(PORT, () => {
       console.log('====================================================');
       console.log(` ToyBrick Studio Server đang chạy tại: http://localhost:${PORT}`);
       console.log(` Môi trường: ${process.env.NODE_ENV || 'development'}`);
       console.log('====================================================');
     });
+
+    // Kết nối Database trong nền
+    connectDB();
   } catch (error) {
     console.error('Lỗi khởi động máy chủ:', error.message);
     process.exit(1);

@@ -72,6 +72,23 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Chống NoSQL Injection
 app.use(sanitize);
 
+// Middleware kiểm tra kết nối Database trước khi xử lý API
+app.use('/api', (req, res, next) => {
+  // Ngoại trừ endpoint kiểm tra sức khỏe
+  if (req.path === '/health') return next();
+
+  const mongoose = require('mongoose');
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).json({
+      success: false,
+      isDbOffline: true,
+      message: 'Chưa kết nối được MongoDB Atlas (Lỗi: bad auth hoặc mạng). Vui lòng kiểm tra lại tài khoản trong file .env và mục Database Access trên Atlas.',
+      hint: 'Mở MongoDB Atlas -> Database Access -> Đặt lại mật khẩu cho Database User và cập nhật vào .env'
+    });
+  }
+  next();
+});
+
 // Rate limiter riêng cho /api/auth (10 lần / 15 phút)
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,

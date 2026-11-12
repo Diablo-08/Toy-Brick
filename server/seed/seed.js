@@ -26,7 +26,14 @@ for (const envVar of requiredEnvVars) {
 
 const seedDatabase = async () => {
   try {
-    await connectDB();
+    const conn = await connectDB();
+    if (!conn) {
+      console.error('====================================================');
+      console.error('[Seed Thất Bại]: Chưa thể kết nối với MongoDB Atlas để nạp dữ liệu.');
+      console.error('Vui lòng kiểm tra lại Username/Password trong file .env theo hướng dẫn ở trên.');
+      console.error('====================================================');
+      process.exit(1);
+    }
     console.log('[Seed] Đang dọn dẹp dữ liệu cũ...');
 
     // Dọn dẹp collection

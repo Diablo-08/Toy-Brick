@@ -43,6 +43,11 @@ const API = (() => {
         }
       }
 
+      // Nếu 503 DB offline
+      if (response.status === 503 && data.isDbOffline) {
+        UI.toast('error', data.message);
+      }
+
       if (!response.ok) {
         throw new Error(data.message || `Lỗi yêu cầu: ${response.status}`);
       }
