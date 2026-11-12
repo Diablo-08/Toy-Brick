@@ -1,0 +1,152 @@
+/* Google Fonts: Playfair Display, Lora, Be Vietnam Pro với tiếng Việt đầy đủ */
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;1,600&display=swap');
+
+:root {
+  --font-heading: 'Playfair Display', serif;
+  --font-body: 'Lora', serif;
+  --font-ui: 'Be Vietnam Pro', sans-serif;
+
+  --bg-deep-space: #070913;
+  --bg-nebula: #0d1224;
+  --gold-glow: #f59e0b;
+  --amber-gold: #ff6f00;
+  --cyan-nebula: #38bdf8;
+}
+
+body {
+  font-family: var(--font-ui);
+  background-color: var(--bg-deep-space);
+  color: #f1f5f9;
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+.font-playfair {
+  font-family: var(--font-heading);
+}
+
+.font-lora {
+  font-family: var(--font-body);
+}
+
+.font-vietnam {
+  font-family: var(--font-ui);
+}
+
+/* Hiệu ứng kính mờ thiên giới (Celestial Glassmorphism) */
+.glass-panel {
+  background: rgba(15, 23, 42, 0.72);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(245, 158, 11, 0.18);
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7),
+              0 0 25px -5px rgba(245, 158, 11, 0.08);
+}
+
+.glass-panel-hover {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-panel-hover:hover {
+  background: rgba(30, 41, 59, 0.82);
+  border-color: rgba(245, 158, 11, 0.45);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8),
+              0 0 35px 2px rgba(245, 158, 11, 0.2);
+  transform: translateY(-3px);
+}
+
+/* Viền ánh kim vàng (Celestial Gold Border) */
+.gold-border {
+  border-color: rgba(245, 158, 11, 0.35);
+}
+
+/* Nút bấm vàng ánh kim chuyển sắc */
+.btn-gold {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #b45309 100%);
+  color: #050814;
+  font-weight: 600;
+  box-shadow: 0 4px 20px rgba(245, 158, 11, 0.35);
+  transition: all 0.25s ease;
+}
+
+.btn-gold:hover {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
+  box-shadow: 0 6px 25px rgba(245, 158, 11, 0.55);
+  transform: translateY(-2px);
+}
+
+.btn-gold:active {
+  transform: translateY(0);
+}
+
+/* Canvas hạt nền phía sau */
+#particles-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Container chính nổi phía trên canvas */
+#app-root {
+  position: relative;
+  z-index: 10;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Thanh cuộn phong cách tối */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #090d1a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(245, 158, 11, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(245, 158, 11, 0.6);
+}
+
+/* Animation bung tỏa nhẹ cho badge và modal */
+@keyframes celestial-pulse {
+  0%, 100% {
+    opacity: 0.85;
+    box-shadow: 0 0 15px rgba(245, 158, 11, 0.3);
+  }
+  50% {
+    opacity: 1;
+    box-shadow: 0 0 25px rgba(245, 158, 11, 0.65);
+  }
+}
+
+.animate-celestial {
+  animation: celestial-pulse 3s infinite ease-in-out;
+}
+
+/* Skeleton Loading Animation */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.04) 25%, rgba(255, 255, 255, 0.12) 50%, rgba(255, 255, 255, 0.04) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.8s infinite;
+  border-radius: 8px;
+}
