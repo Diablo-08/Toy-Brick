@@ -190,7 +190,7 @@ const updateProduct = async (req, res) => {
   if (updateData.salePrice !== undefined) updateData.salePrice = updateData.salePrice ? Number(updateData.salePrice) : null;
   if (updateData.stock !== undefined) updateData.stock = Number(updateData.stock);
 
-  const product = await Product.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
+  const product = await Product.findByIdAndUpdate(id, updateData, { returnDocument: 'after', runValidators: true });
   if (!product) {
     return res.status(404).json({ success: false, message: 'Không tìm thấy sản phẩm' });
   }
@@ -290,7 +290,7 @@ const updateBrick = async (req, res) => {
   if (updateData.price !== undefined) updateData.price = Number(updateData.price);
   if (updateData.stock !== undefined) updateData.stock = Number(updateData.stock);
 
-  const brick = await Brick.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
+  const brick = await Brick.findByIdAndUpdate(id, updateData, { returnDocument: 'after', runValidators: true });
   if (!brick) {
     return res.status(404).json({ success: false, message: 'Không tìm thấy gạch lẻ' });
   }

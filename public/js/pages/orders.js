@@ -228,7 +228,7 @@ const OrdersPage = {
             ${canCancel ? `
               <div class="glass-panel rounded-3xl p-6 border border-rose-500/30 text-center space-y-3">
                 <p class="text-xs text-slate-400">Đơn hàng đang ở trạng thái Chờ xác nhận, bạn có thể tự hủy để hoàn lại tồn kho.</p>
-                <button onclick="OrdersPage.cancelOrder('${ord._id}')" class="w-full py-3 rounded-xl bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white border border-rose-500/40 text-xs font-bold transition flex items-center justify-center space-x-2">
+                <button data-action="cancel-order" data-order-id="${ord._id}" class="w-full py-3 rounded-xl bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white border border-rose-500/40 text-xs font-bold transition flex items-center justify-center space-x-2">
                   <i class="fa-solid fa-ban"></i>
                   <span>Hủy Đơn Hàng Này</span>
                 </button>
@@ -239,6 +239,14 @@ const OrdersPage = {
 
         </div>
       `;
+
+      // Event delegation cho nút hủy đơn hàng
+      container.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-action="cancel-order"]');
+        if (btn) {
+          OrdersPage.cancelOrder(btn.dataset.orderId);
+        }
+      });
 
     } catch (err) {
       container.innerHTML = UI.renderEmptyState('fa-triangle-exclamation', 'Lỗi', err.message);

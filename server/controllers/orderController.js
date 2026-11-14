@@ -61,13 +61,13 @@ const createOrder = async (req, res) => {
         updatedDoc = await Product.findOneAndUpdate(
           { _id: refId, isActive: true, stock: { $gte: qty } },
           { $inc: { stock: -qty } },
-          { new: true }
+          { returnDocument: 'after' }
         );
       } else {
         updatedDoc = await Brick.findOneAndUpdate(
           { _id: refId, isActive: true, stock: { $gte: qty } },
           { $inc: { stock: -qty } },
-          { new: true }
+          { returnDocument: 'after' }
         );
       }
 

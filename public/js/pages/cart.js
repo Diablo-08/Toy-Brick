@@ -141,11 +141,11 @@ const CartPage = {
                 <!-- Điều khiển số lượng & Xóa -->
                 <div class="flex items-center justify-between sm:justify-end space-x-6 w-full sm:w-auto">
                   <div class="flex items-center border border-slate-700 rounded-xl overflow-hidden bg-slate-900">
-                    <button class="px-3 py-1.5 text-slate-400 hover:text-white hover:bg-slate-800 transition" onclick="CartPage.updateQty('${item._id}', ${item.qty - 1}, '${item.kind}', '${item.ref}')">
+                    <button class="px-3 py-1.5 text-slate-400 hover:text-white hover:bg-slate-800 transition" data-action="update-qty" data-id="${item._id}" data-qty="${item.qty - 1}" data-kind="${item.kind}" data-ref="${item.ref}">
                       <i class="fa-solid fa-minus text-xs"></i>
                     </button>
                     <span class="px-3 py-1.5 text-xs font-bold text-slate-100 font-mono min-w-[32px] text-center">${item.qty}</span>
-                    <button class="px-3 py-1.5 text-slate-400 hover:text-white hover:bg-slate-800 transition" onclick="CartPage.updateQty('${item._id}', ${item.qty + 1}, '${item.kind}', '${item.ref}')">
+                    <button class="px-3 py-1.5 text-slate-400 hover:text-white hover:bg-slate-800 transition" data-action="update-qty" data-id="${item._id}" data-qty="${item.qty + 1}" data-kind="${item.kind}" data-ref="${item.ref}">
                       <i class="fa-solid fa-plus text-xs"></i>
                     </button>
                   </div>
@@ -156,7 +156,7 @@ const CartPage = {
                     </span>
                   </div>
 
-                  <button class="text-slate-500 hover:text-rose-400 transition p-1.5" onclick="CartPage.removeItem('${item._id}', '${item.kind}', '${item.ref}')" title="Xóa mặt hàng này">
+                  <button class="text-slate-500 hover:text-rose-400 transition p-1.5" data-action="remove-item" data-id="${item._id}" data-kind="${item.kind}" data-ref="${item.ref}" title="Xóa mặt hàng này">
                     <i class="fa-solid fa-trash-can text-sm"></i>
                   </button>
                 </div>
@@ -170,7 +170,7 @@ const CartPage = {
               <i class="fa-solid fa-arrow-left text-[10px]"></i>
               <span>Tiếp tục chọn thêm mô hình</span>
             </a>
-            <button onclick="CartPage.clearAll()" class="text-rose-400 hover:text-rose-300 transition">
+            <button data-action="clear-all" class="text-rose-400 hover:text-rose-300 transition">
               <i class="fa-solid fa-xmark mr-1"></i>Xóa sạch giỏ hàng
             </button>
           </div>
@@ -236,6 +236,20 @@ const CartPage = {
         }
       });
     }
+
+    // Event delegation cho các nút tăng/giảm, xóa, xóa sạch
+    wrapper.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-action]');
+      if (!btn) return;
+      const action = btn.dataset.action;
+      if (action === 'update-qty') {
+        CartPage.updateQty(btn.dataset.id, parseInt(btn.dataset.qty), btn.dataset.kind, btn.dataset.ref);
+      } else if (action === 'remove-item') {
+        CartPage.removeItem(btn.dataset.id, btn.dataset.kind, btn.dataset.ref);
+      } else if (action === 'clear-all') {
+        CartPage.clearAll();
+      }
+    });
   },
 
   updateQty: async (itemId, newQty, kind, refId) => {
