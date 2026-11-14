@@ -49,7 +49,6 @@ const brickSchema = new mongoose.Schema({
   timestamps: true
 });
 
-brickSchema.index({ code: 1 });
 brickSchema.index({ name: 'text', code: 'text' });
 brickSchema.index({ category: 1, color: 1, isActive: 1 });
 

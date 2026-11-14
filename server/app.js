@@ -74,8 +74,8 @@ app.use(sanitize);
 
 // Middleware kiểm tra kết nối Database trước khi xử lý API
 app.use('/api', (req, res, next) => {
-  // Ngoại trừ endpoint kiểm tra sức khỏe
-  if (req.path === '/health') return next();
+  // Ngoại trừ endpoint kiểm tra sức khỏe và ping
+  if (req.path === '/health' || req.path === '/ping') return next();
 
   const mongoose = require('mongoose');
   if (mongoose.connection.readyState !== 1) {
@@ -109,13 +109,25 @@ app.use('/api/cart', cartRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/admin', adminRoutes);
 
-// Health check endpoint
+// Health check & Ping endpoints
 app.get('/api/health', (req, res) => {
   res.json({
     success: true,
     message: 'ToyBrick Studio API is running',
     timestamp: new Date().toISOString()
   });
+});
+
+app.get(['/ping', '/api/ping'], (req, res) => {
+  if (req.headers.accept && req.headers.accept.includes('application/json')) {
+    return res.status(200).json({
+      status: 'ok',
+      message: 'pong',
+      uptime: process.uptime(),
+      timestamp: new Date().toISOString()
+    });
+  }
+  res.status(200).send('pong');
 });
 
 module.exports = app;

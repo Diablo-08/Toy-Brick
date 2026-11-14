@@ -1,6 +1,5 @@
-require('dotenv').config();
+require('dotenv').config({ quiet: true });
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
 const connectDB = require('../config/db');
 const User = require('../models/User');
 const Product = require('../models/Product');
@@ -47,8 +46,8 @@ const seedDatabase = async () => {
     // --- 1. TẠO HOẶC CẬP NHẬT TÀI KHOẢN ADMIN ---
     const adminUsername = process.env.ADMIN_USERNAME.toLowerCase().trim();
     const adminEmail = process.env.ADMIN_EMAIL.toLowerCase().trim();
-    const salt = await bcrypt.genSalt(10);
-    const hashedAdminPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD, salt);
+    // Bỏ ngoặc kép bao ngoài nếu có trong .env
+    const cleanAdminPassword = process.env.ADMIN_PASSWORD.replace(/^"|"$/g, '');
 
     let adminUser = await User.findOne({
       $or: [{ username: adminUsername }, { email: adminEmail }]
@@ -58,7 +57,7 @@ const seedDatabase = async () => {
       adminUser.name = 'ToyBrick Master Admin';
       adminUser.username = adminUsername;
       adminUser.email = adminEmail;
-      adminUser.password = hashedAdminPassword;
+      adminUser.password = cleanAdminPassword;
       adminUser.role = 'admin';
       await adminUser.save();
     } else {
@@ -66,7 +65,7 @@ const seedDatabase = async () => {
         name: 'ToyBrick Master Admin',
         username: adminUsername,
         email: adminEmail,
-        password: hashedAdminPassword,
+        password: cleanAdminPassword,
         role: 'admin',
         phone: '0901234567',
         addresses: [
@@ -87,7 +86,6 @@ const seedDatabase = async () => {
     // --- 2. TẠO TÀI KHOẢN KHÁCH DEMO ---
     const customerUsername = 'demo_customer';
     const customerEmail = 'khachhang@toybrick.vn';
-    const customerPasswordHash = await bcrypt.hash('KhachHang@123', salt);
 
     await User.deleteMany({
       $or: [{ username: customerUsername }, { email: customerEmail }]
@@ -97,7 +95,7 @@ const seedDatabase = async () => {
       name: 'Nguyễn Văn An',
       username: customerUsername,
       email: customerEmail,
-      password: customerPasswordHash,
+      password: 'KhachHang@123',
       role: 'customer',
       phone: '0988776655',
       addresses: [

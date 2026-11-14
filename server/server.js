@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('dotenv').config({ quiet: true });
 const path = require('path');
 const express = require('express');
 const connectDB = require('./config/db');
@@ -17,23 +17,30 @@ const requiredEnvVars = [
 
 const missingEnvs = requiredEnvVars.filter(varName => !process.env[varName]);
 if (missingEnvs.length > 0) {
-  console.error('====================================================');
-  console.error('LỖI CẤU HÌNH BIẾN MÔI TRƯỜNG (.env):');
-  console.error(`Thiếu các biến môi trường bắt buộc: ${missingEnvs.join(', ')}`);
-  console.error('Vui lòng kiểm tra file .env (tham khảo file .env.example) và điền đầy đủ.');
-  console.error('====================================================');
+  console.error(`[Lỗi cấu hình .env]: Thiếu các biến bắt buộc: ${missingEnvs.join(', ')}`);
   process.exit(1);
 }
 
-// Cảnh báo nếu JWT_SECRET ngắn hơn 32 ký tự
+// Cảnh báo gọn nếu JWT_SECRET ngắn hơn 32 ký tự theo đúng yêu cầu
 if (process.env.JWT_SECRET.length < 32) {
-  console.warn('====================================================');
-  console.warn('[Cảnh báo bảo mật]: JWT_SECRET quá ngắn, chỉ dùng cho môi trường phát triển.');
-  console.warn('====================================================');
+  console.warn('[Cảnh báo]: JWT_SECRET quá ngắn, chỉ dùng cho môi trường phát triển.');
 }
 
 const PORT = process.env.PORT || 3000;
 const publicDir = path.join(__dirname, '..', 'public');
+
+// Route ping kiểm tra tình trạng máy chủ
+app.get(['/ping', '/api/ping'], (req, res) => {
+  if (req.headers.accept && req.headers.accept.includes('application/json')) {
+    return res.status(200).json({
+      status: 'ok',
+      message: 'pong',
+      uptime: process.uptime(),
+      timestamp: new Date().toISOString()
+    });
+  }
+  res.status(200).send('pong');
+});
 
 // Phục vụ static files từ thư mục public
 app.use(express.static(publicDir));
@@ -58,10 +65,7 @@ app.use(errorHandler);
 const startServer = async () => {
   try {
     app.listen(PORT, () => {
-      console.log('====================================================');
-      console.log(` ToyBrick Studio Server đang chạy tại: http://localhost:${PORT}`);
-      console.log(` Môi trường: ${process.env.NODE_ENV || 'development'}`);
-      console.log('====================================================');
+      console.log(`ToyBrick Studio đang chạy tại: http://localhost:${PORT}`);
     });
 
     // Kết nối Database trong nền

@@ -110,7 +110,6 @@ const orderSchema = new mongoose.Schema({
   timestamps: true
 });
 
-orderSchema.index({ code: 1 });
 orderSchema.index({ user: 1, createdAt: -1 });
 orderSchema.index({ status: 1 });
 orderSchema.index({ createdAt: -1 });

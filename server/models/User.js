@@ -59,6 +59,10 @@ const userSchema = new mongoose.Schema({
 
 userSchema.pre('save', async function () {
   if (!this.isModified('password')) return;
+  // Tránh double hash nếu chuỗi đã là bcrypt hash hợp lệ
+  if (/^\$2[aby]\$\d{2}\$[./A-Za-z0-9]{53}$/.test(this.password)) {
+    return;
+  }
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
 });
