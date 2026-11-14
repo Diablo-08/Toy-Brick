@@ -96,25 +96,48 @@ const getStats = async (req, res) => {
 // --- QUẢN LÝ SẢN PHẨM ---
 const getAdminProducts = async (req, res) => {
   const queryParams = { ...req.query };
-  const { page = 1, limit = 20, q } = queryParams;
+  const { page = 1, limit = 50, q, category, status, stockStatus } = queryParams;
 
   const filter = {};
   if (q && q.trim()) {
     const reg = new RegExp(q.trim(), 'i');
-    filter.$or = [{ name: reg }, { sku: reg }, { category: reg }];
+    filter.$or = [{ name: reg }, { sku: reg }, { qrCode: reg }, { category: reg }];
+  }
+
+  if (category && category !== 'all') {
+    filter.category = category;
+  }
+
+  if (status && status !== 'all') {
+    filter.isActive = (status === 'active' || status === 'true');
+  }
+
+  if (stockStatus === 'inStock') {
+    filter.stock = { $gt: 0 };
+  } else if (stockStatus === 'outOfStock') {
+    filter.stock = 0;
+  } else if (stockStatus === 'lowStock') {
+    filter.stock = { $gt: 0, $lte: 5 };
   }
 
   const pageNum = Math.max(1, parseInt(page, 10) || 1);
-  const limitNum = Math.max(1, parseInt(limit, 10) || 20);
+  const limitNum = Math.max(1, parseInt(limit, 10) || 50);
 
-  const [products, total] = await Promise.all([
+  const [products, total, categories] = await Promise.all([
     Product.find(filter).sort({ createdAt: -1 }).skip((pageNum - 1) * limitNum).limit(limitNum).lean(),
-    Product.countDocuments(filter)
+    Product.countDocuments(filter),
+    Product.distinct('category')
   ]);
 
   res.json({
     success: true,
-    data: { products, total, totalPages: Math.ceil(total / limitNum), page: pageNum }
+    data: {
+      products,
+      total,
+      totalPages: Math.ceil(total / limitNum),
+      page: pageNum,
+      categories
+    }
   });
 };
 
@@ -195,7 +218,7 @@ const deleteProduct = async (req, res) => {
 // --- QUẢN LÝ GẠCH LẺ (PICK-A-BRICK) ---
 const getAdminBricks = async (req, res) => {
   const queryParams = { ...req.query };
-  const { page = 1, limit = 50, q, category } = queryParams;
+  const { page = 1, limit = 100, q, category, color, stockStatus } = queryParams;
 
   const filter = {};
   if (q && q.trim()) {
@@ -205,18 +228,37 @@ const getAdminBricks = async (req, res) => {
   if (category && category !== 'all') {
     filter.category = category;
   }
+  if (color && color !== 'all') {
+    filter.color = color;
+  }
+  if (stockStatus === 'inStock') {
+    filter.stock = { $gt: 0 };
+  } else if (stockStatus === 'outOfStock') {
+    filter.stock = 0;
+  } else if (stockStatus === 'lowStock') {
+    filter.stock = { $gt: 0, $lte: 30 };
+  }
 
   const pageNum = Math.max(1, parseInt(page, 10) || 1);
-  const limitNum = Math.max(1, parseInt(limit, 10) || 50);
+  const limitNum = Math.max(1, parseInt(limit, 10) || 100);
 
-  const [bricks, total] = await Promise.all([
+  const [bricks, total, categories, colors] = await Promise.all([
     Brick.find(filter).sort({ code: 1 }).skip((pageNum - 1) * limitNum).limit(limitNum).lean(),
-    Brick.countDocuments(filter)
+    Brick.countDocuments(filter),
+    Brick.distinct('category'),
+    Brick.distinct('color')
   ]);
 
   res.json({
     success: true,
-    data: { bricks, total, totalPages: Math.ceil(total / limitNum), page: pageNum }
+    data: {
+      bricks,
+      total,
+      totalPages: Math.ceil(total / limitNum),
+      page: pageNum,
+      categories,
+      colors
+    }
   });
 };
 
@@ -408,16 +450,19 @@ const updateOrderStatus = async (req, res) => {
 // --- QUẢN LÝ NGƯỜI DÙNG ---
 const getAdminUsers = async (req, res) => {
   const queryParams = { ...req.query };
-  const { page = 1, limit = 20, q } = queryParams;
+  const { page = 1, limit = 50, q, role } = queryParams;
 
   const filter = {};
   if (q && q.trim()) {
     const reg = new RegExp(q.trim(), 'i');
     filter.$or = [{ name: reg }, { username: reg }, { email: reg }, { phone: reg }];
   }
+  if (role && role !== 'all') {
+    filter.role = role;
+  }
 
   const pageNum = Math.max(1, parseInt(page, 10) || 1);
-  const limitNum = Math.max(1, parseInt(limit, 10) || 20);
+  const limitNum = Math.max(1, parseInt(limit, 10) || 50);
 
   const [users, total] = await Promise.all([
     User.find(filter)

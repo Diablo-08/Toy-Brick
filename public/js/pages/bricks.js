@@ -5,6 +5,10 @@
  */
 const BricksPage = {
   pollingTimer: null,
+  searchDebounceTimer: null,
+  cachedColors: [],
+  cachedCategories: [],
+
   currentParams: {
     page: 1,
     limit: 24,
@@ -29,18 +33,18 @@ const BricksPage = {
 
       <!-- BỘ LỌC GẠCH LẺ -->
       <div class="glass-panel rounded-2xl p-4 sm:p-6 mb-8 border border-amber-500/20 space-y-4">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 sm:gap-4 items-center">
 
-          <!-- Tìm theo mã hoặc tên -->
-          <div class="relative">
+          <!-- 1. Tìm theo mã hoặc tên (4 cột) -->
+          <div class="lg:col-span-4 relative">
             <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
               <i class="fa-solid fa-magnifying-glass text-xs"></i>
             </span>
-            <input type="text" id="brick-search" class="w-full pl-9 pr-4 py-2 bg-slate-900/90 border border-slate-700 rounded-xl text-slate-100 text-xs focus:outline-none focus:border-amber-400 transition" placeholder="Nhập mã #3001 hoặc tên gạch...">
+            <input type="text" id="brick-search" value="${UI.escapeHTML(BricksPage.currentParams.q || '')}" class="w-full pl-9 pr-4 py-2 bg-slate-900/90 border border-slate-700 rounded-xl text-slate-100 text-xs focus:outline-none focus:border-amber-400 transition" placeholder="Nhập mã #3001 hoặc tên chi tiết...">
           </div>
 
-          <!-- Lọc loại gạch -->
-          <div>
+          <!-- 2. Lọc loại gạch (3 cột) -->
+          <div class="lg:col-span-3">
             <select id="brick-category" class="w-full px-3 py-2 bg-slate-900/90 border border-slate-700 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-amber-400 transition">
               <option value="all">Tất cả loại gạch</option>
               <option value="Gạch cơ bản (Standard)">Gạch cơ bản (Standard)</option>
@@ -52,33 +56,45 @@ const BricksPage = {
             </select>
           </div>
 
-          <!-- Lọc màu sắc -->
-          <div>
+          <!-- 3. Lọc màu sắc (2 cột) -->
+          <div class="lg:col-span-2">
             <select id="brick-color" class="w-full px-3 py-2 bg-slate-900/90 border border-slate-700 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-amber-400 transition">
               <option value="all">Tất cả màu sắc</option>
-              <!-- Nạp động qua API -->
             </select>
           </div>
 
-          <!-- Nút lọc & Checkbox còn hàng -->
-          <div class="flex items-center space-x-3">
+          <!-- 4. Checkbox còn hàng & Nút đặt lại (3 cột) -->
+          <div class="lg:col-span-3 flex items-center justify-between space-x-2">
             <label class="flex items-center space-x-2 text-xs text-slate-300 cursor-pointer select-none">
-              <input type="checkbox" id="brick-instock" class="rounded bg-slate-900 border-slate-700 text-amber-500 focus:ring-amber-400">
-              <span>Chỉ còn hàng</span>
+              <input type="checkbox" id="brick-instock" ${BricksPage.currentParams.inStock ? 'checked' : ''} class="rounded bg-slate-900 border-slate-700 text-amber-500 focus:ring-amber-400">
+              <span>Còn hàng</span>
             </label>
 
-            <button id="brick-filter-btn" class="flex-1 py-2 rounded-xl btn-gold text-slate-950 font-bold text-xs transition flex items-center justify-center space-x-1.5">
-              <i class="fa-solid fa-filter text-xs"></i>
-              <span>Lọc</span>
-            </button>
+            <div class="flex items-center space-x-2">
+              <button id="brick-reset-btn" onclick="BricksPage.resetFilters()" class="py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 hover:border-slate-600 text-xs font-semibold transition flex items-center space-x-1" title="Đặt lại bộ lọc">
+                <i class="fa-solid fa-rotate-right text-[11px]"></i>
+                <span>Đặt lại</span>
+              </button>
+
+              <button id="brick-filter-btn" class="py-2 px-3.5 rounded-xl btn-gold text-slate-950 font-bold text-xs transition flex items-center space-x-1 shadow-md">
+                <i class="fa-solid fa-filter text-[11px]"></i>
+                <span>Lọc</span>
+              </button>
+            </div>
           </div>
 
         </div>
 
-        <!-- Bảng Swatch Màu Nhanh -->
-        <div id="color-swatches-container" class="pt-3 border-t border-slate-800 flex items-center flex-wrap gap-2 text-xs">
-          <span class="text-slate-400 mr-2 text-[11px]">Bảng màu nhanh:</span>
-          <!-- Render các nút chấm tròn swatch màu sắc -->
+        <!-- Bảng Swatch Màu Nhanh & Trạng thái lọc -->
+        <div class="pt-3 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+          <div id="color-swatches-container" class="flex items-center flex-wrap gap-1.5">
+            <span class="text-slate-400 mr-1 text-[11px]">Bảng màu nhanh:</span>
+            <!-- Render swatches qua JS -->
+          </div>
+
+          <div id="brick-filter-status" class="text-[11px] text-slate-400 whitespace-nowrap">
+            Đang tải dữ liệu...
+          </div>
         </div>
       </div>
 
@@ -106,6 +122,14 @@ const BricksPage = {
     const colorSelect = document.getElementById('brick-color');
     const inStockCheck = document.getElementById('brick-instock');
     const filterBtn = document.getElementById('brick-filter-btn');
+
+    // Đồng bộ giá trị từ currentParams
+    if (categorySelect && BricksPage.currentParams.category) {
+      categorySelect.value = BricksPage.currentParams.category;
+    }
+    if (colorSelect && BricksPage.currentParams.color) {
+      colorSelect.value = BricksPage.currentParams.color;
+    }
 
     const triggerFilter = () => {
       BricksPage.currentParams.q = searchInput ? searchInput.value.trim() : '';
@@ -150,11 +174,36 @@ const BricksPage = {
     }
   },
 
+  resetFilters: () => {
+    BricksPage.currentParams = {
+      page: 1,
+      limit: 24,
+      q: '',
+      color: 'all',
+      category: 'all',
+      inStock: false
+    };
+
+    const searchInput = document.getElementById('brick-search');
+    const categorySelect = document.getElementById('brick-category');
+    const colorSelect = document.getElementById('brick-color');
+    const inStockCheck = document.getElementById('brick-instock');
+
+    if (searchInput) searchInput.value = '';
+    if (categorySelect) categorySelect.value = 'all';
+    if (colorSelect) colorSelect.value = 'all';
+    if (inStockCheck) inStockCheck.checked = false;
+
+    BricksPage.updateSwatchesUI();
+    BricksPage.loadBricks();
+  },
+
   loadBricks: async (isSilent = false) => {
     const container = document.getElementById('bricks-grid-container');
     const pagContainer = document.getElementById('bricks-pagination');
+    const categorySelect = document.getElementById('brick-category');
     const colorSelect = document.getElementById('brick-color');
-    const swatchesContainer = document.getElementById('color-swatches-container');
+    const statusEl = document.getElementById('brick-filter-status');
 
     if (!container) return;
 
@@ -171,40 +220,65 @@ const BricksPage = {
 
       const { bricks = [], filters = {}, pagination = {} } = res.data;
 
-      // Nạp dropdown màu và swatch màu nếu có
-      if (filters.colors && colorSelect && colorSelect.options.length <= 1) {
-        filters.colors.forEach(c => {
+      // Lưu cache colors & categories
+      if (filters.colors && filters.colors.length > 0) {
+        BricksPage.cachedColors = filters.colors;
+      }
+      if (filters.categories && filters.categories.length > 0) {
+        BricksPage.cachedCategories = filters.categories;
+      }
+
+      // Nạp động dropdown category nếu chưa đủ
+      if (categorySelect && BricksPage.cachedCategories.length > 0) {
+        const currentVal = categorySelect.value || BricksPage.currentParams.category || 'all';
+        const existingVals = Array.from(categorySelect.options).map(o => o.value);
+        BricksPage.cachedCategories.forEach(cat => {
+          if (!existingVals.includes(cat)) {
+            const opt = document.createElement('option');
+            opt.value = cat;
+            opt.textContent = cat;
+            categorySelect.appendChild(opt);
+          }
+        });
+        categorySelect.value = currentVal;
+      }
+
+      // Nạp dropdown màu nếu chỉ có option "Tất cả"
+      if (colorSelect && BricksPage.cachedColors.length > 0 && colorSelect.options.length <= 1) {
+        BricksPage.cachedColors.forEach(c => {
           const opt = document.createElement('option');
           opt.value = c.name;
           opt.textContent = c.name;
           colorSelect.appendChild(opt);
         });
+        colorSelect.value = BricksPage.currentParams.color || 'all';
+      }
 
-        if (swatchesContainer) {
-          let swatchHtml = '<span class="text-slate-400 mr-2 text-[11px]">Bảng màu nhanh:</span>';
-          swatchHtml += `
-            <button class="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-800 text-slate-300 hover:text-white border border-slate-700" onclick="BricksPage.filterByColor('all')">
-              Tất cả
-            </button>
-          `;
-          filters.colors.slice(0, 8).forEach(c => {
-            swatchHtml += `
-              <button class="inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[10px] bg-slate-900 border border-slate-700 hover:border-amber-400 text-slate-300 transition" onclick="BricksPage.filterByColor('${UI.escapeHTML(c.name)}')">
-                <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${UI.escapeHTML(c.hex)}"></span>
-                <span>${UI.escapeHTML(c.name)}</span>
-              </button>
-            `;
-          });
-          swatchesContainer.innerHTML = swatchHtml;
-        }
+      // Render các swatch màu sắc
+      BricksPage.updateSwatchesUI();
+
+      // Cập nhật dòng trạng thái kết quả
+      if (statusEl) {
+        const total = pagination.total !== undefined ? pagination.total : bricks.length;
+        statusEl.innerHTML = `Tìm thấy <strong class="text-amber-400 font-mono">${total}</strong> chi tiết gạch phù hợp`;
       }
 
       if (bricks.length === 0) {
-        container.innerHTML = UI.renderEmptyState(
-          'fa-puzzle-piece',
-          'Không tìm thấy chi tiết gạch',
-          'Hãy thử thay đổi mã hoặc màu sắc đang tìm kiếm.'
-        );
+        container.innerHTML = `
+          <div class="glass-panel rounded-3xl p-10 text-center max-w-lg mx-auto border border-amber-500/20 my-8">
+            <div class="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto mb-4 text-amber-400 text-2xl">
+              <i class="fa-solid fa-puzzle-piece"></i>
+            </div>
+            <h3 class="text-lg font-bold font-heading text-slate-100 mb-2">Không tìm thấy chi tiết gạch phù hợp</h3>
+            <p class="text-xs text-slate-400 mb-6">
+              Không có mã gạch nào khớp với bộ lọc hiện tại. Hãy thử tìm từ khóa khác hoặc xóa bộ lọc để xem toàn bộ kho.
+            </p>
+            <button onclick="BricksPage.resetFilters()" class="px-5 py-2.5 rounded-xl btn-gold text-slate-950 font-bold text-xs transition inline-flex items-center space-x-2">
+              <i class="fa-solid fa-rotate-right"></i>
+              <span>Xem Tất Cả Chi Tiết Gạch</span>
+            </button>
+          </div>
+        `;
         if (pagContainer) pagContainer.innerHTML = '';
         return;
       }
@@ -221,17 +295,19 @@ const BricksPage = {
                 <span class="px-2.5 py-1 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-300 font-mono text-xs font-bold">
                   ${UI.escapeHTML(b.code)}
                 </span>
-                <div class="flex items-center space-x-1.5 text-xs text-slate-300">
+                <button onclick="BricksPage.filterByColor('${UI.escapeHTML(b.color)}')" class="flex items-center space-x-1.5 text-xs text-slate-300 hover:text-amber-400 transition" title="Lọc theo màu ${UI.escapeHTML(b.color)}">
                   <span class="w-3.5 h-3.5 rounded-full border border-white/20 shadow-sm" style="background-color: ${UI.escapeHTML(b.colorHex)}"></span>
                   <span class="text-[11px] truncate max-w-[100px]">${UI.escapeHTML(b.color)}</span>
-                </div>
+                </button>
               </div>
 
               <!-- Tên gạch -->
               <h3 class="font-heading font-bold text-sm text-slate-100 group-hover:text-amber-400 transition line-clamp-2 leading-snug">
                 ${UI.escapeHTML(b.name)}
               </h3>
-              <span class="text-[10px] text-slate-400 block mt-1">${UI.escapeHTML(b.category)}</span>
+              <button onclick="BricksPage.filterByCategory('${UI.escapeHTML(b.category)}')" class="text-[10px] text-slate-400 hover:text-amber-400 block mt-1 transition text-left" title="Lọc theo loại ${UI.escapeHTML(b.category)}">
+                <i class="fa-solid fa-tag text-[9px] mr-1"></i>${UI.escapeHTML(b.category)}
+              </button>
             </div>
 
             <div class="pt-4 mt-4 border-t border-slate-800/80 space-y-3">
@@ -270,10 +346,47 @@ const BricksPage = {
     }
   },
 
+  updateSwatchesUI: () => {
+    const swatchesContainer = document.getElementById('color-swatches-container');
+    if (!swatchesContainer) return;
+
+    const currentColor = BricksPage.currentParams.color || 'all';
+    const isAll = currentColor === 'all' || !currentColor;
+
+    let swatchHtml = '<span class="text-slate-400 mr-1 text-[11px]">Bảng màu nhanh:</span>';
+    swatchHtml += `
+      <button class="px-2 py-0.5 rounded text-[10px] font-semibold transition ${isAll ? 'bg-amber-400 text-slate-950 font-bold shadow-sm' : 'bg-slate-800 text-slate-300 hover:text-white border border-slate-700'}" onclick="BricksPage.filterByColor('all')">
+        Tất cả
+      </button>
+    `;
+
+    const colors = BricksPage.cachedColors || [];
+    colors.slice(0, 10).forEach(c => {
+      const isSelected = currentColor === c.name;
+      swatchHtml += `
+        <button class="inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[10px] transition ${isSelected ? 'bg-amber-500/25 border border-amber-400 text-amber-300 font-bold' : 'bg-slate-900 border border-slate-700 hover:border-amber-400/50 text-slate-300'}" onclick="BricksPage.filterByColor('${UI.escapeHTML(c.name)}')">
+          <span class="w-2.5 h-2.5 rounded-full border border-white/20" style="background-color: ${UI.escapeHTML(c.hex)}"></span>
+          <span>${UI.escapeHTML(c.name)}</span>
+        </button>
+      `;
+    });
+
+    swatchesContainer.innerHTML = swatchHtml;
+  },
+
   filterByColor: (colorName) => {
     const colorSelect = document.getElementById('brick-color');
     if (colorSelect) colorSelect.value = colorName;
     BricksPage.currentParams.color = colorName;
+    BricksPage.currentParams.page = 1;
+    BricksPage.updateSwatchesUI();
+    BricksPage.loadBricks();
+  },
+
+  filterByCategory: (categoryName) => {
+    const categorySelect = document.getElementById('brick-category');
+    if (categorySelect) categorySelect.value = categoryName;
+    BricksPage.currentParams.category = categoryName;
     BricksPage.currentParams.page = 1;
     BricksPage.loadBricks();
   },
