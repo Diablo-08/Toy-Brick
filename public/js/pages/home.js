@@ -102,112 +102,128 @@ const HomePage = {
 
     container.innerHTML = `
       <!-- HERO SECTION BANNER VỚI CAROUSEL 3 VẬT PHẨM VÀ NÚT CHUYỂN QUA LẠI -->
-      <section id="hero-banner-section" class="relative mb-16 rounded-3xl overflow-hidden glass-panel border border-amber-500/25 p-6 sm:p-10 shadow-2xl group/banner">
+      <section id="hero-banner-section" class="relative mb-12 sm:mb-16 rounded-3xl overflow-hidden glass-panel border border-amber-500/25 p-4 sm:p-8 lg:p-10 xl:p-12 shadow-2xl group/banner">
         
-        <!-- NÚT MŨI TÊN CHUYỂN SANG TRÁI (PREV) -->
-        <button id="hero-arrow-prev" type="button" aria-label="Vật phẩm trước" class="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-slate-900/90 hover:bg-amber-500 text-slate-300 hover:text-slate-950 border border-amber-500/30 hover:border-amber-400 shadow-2xl backdrop-blur-md flex items-center justify-center transition-all duration-300 group/prev focus:outline-none focus:ring-2 focus:ring-amber-400">
+        <!-- NÚT MŨI TÊN CHUYỂN SANG TRÁI (PREV) TRÊN DESKTOP/TABLET (Ẩn trên mobile để không đè chữ) -->
+        <button id="hero-arrow-prev" type="button" aria-label="Vật phẩm trước" class="hidden md:flex absolute left-2 lg:left-3 top-1/2 -translate-y-1/2 z-30 w-10 h-10 lg:w-12 lg:h-12 rounded-2xl bg-slate-900/90 hover:bg-amber-500 text-slate-300 hover:text-slate-950 border border-amber-500/30 hover:border-amber-400 shadow-2xl backdrop-blur-md items-center justify-center transition-all duration-300 group/prev focus:outline-none focus:ring-2 focus:ring-amber-400">
           <i class="fa-solid fa-chevron-left text-sm sm:text-base group-hover/prev:-translate-x-0.5 transition-transform"></i>
         </button>
 
-        <!-- NÚT MŨI TÊN CHUYỂN SANG PHẢI (NEXT) -->
-        <button id="hero-arrow-next" type="button" aria-label="Vật phẩm kế tiếp" class="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-slate-900/90 hover:bg-amber-500 text-slate-300 hover:text-slate-950 border border-amber-500/30 hover:border-amber-400 shadow-2xl backdrop-blur-md flex items-center justify-center transition-all duration-300 group/next focus:outline-none focus:ring-2 focus:ring-amber-400">
+        <!-- NÚT MŨI TÊN CHUYỂN SANG PHẢI (NEXT) TRÊN DESKTOP/TABLET (Ẩn trên mobile để không đè chữ) -->
+        <button id="hero-arrow-next" type="button" aria-label="Vật phẩm kế tiếp" class="hidden md:flex absolute right-2 lg:right-3 top-1/2 -translate-y-1/2 z-30 w-10 h-10 lg:w-12 lg:h-12 rounded-2xl bg-slate-900/90 hover:bg-amber-500 text-slate-300 hover:text-slate-950 border border-amber-500/30 hover:border-amber-400 shadow-2xl backdrop-blur-md items-center justify-center transition-all duration-300 group/next focus:outline-none focus:ring-2 focus:ring-amber-400">
           <i class="fa-solid fa-chevron-right text-sm sm:text-base group-hover/next:translate-x-0.5 transition-transform"></i>
         </button>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center px-2 sm:px-6">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-8 xl:gap-12 items-center px-1 sm:px-4 md:px-6 lg:px-8">
 
-          <!-- Cột thông tin giới thiệu vật phẩm -->
-          <div id="hero-info-col" class="lg:col-span-5 space-y-6 z-10 transition-opacity duration-300">
+          <!-- Cột thông tin giới thiệu vật phẩm (Linh hoạt, tỷ lệ 6/12, chữ không bị ép tràn khung) -->
+          <div id="hero-info-col" class="lg:col-span-6 xl:col-span-6 flex flex-col justify-between space-y-5 sm:space-y-6 z-10 transition-opacity duration-300 min-w-0">
             
-            <div id="hero-badge-wrap">
-              <div class="inline-flex items-center space-x-2 px-3 py-1.5 rounded-full ${initialItem.badgeClass} text-xs font-semibold">
-                <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
-                <span id="hero-badge-text">${initialItem.badge}</span>
+            <div id="hero-badge-wrap" class="flex items-center">
+              <div class="inline-flex items-center space-x-2 px-3 py-1.5 rounded-full ${initialItem.badgeClass} text-[11px] sm:text-xs font-semibold max-w-full truncate shadow-sm">
+                <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping flex-shrink-0"></span>
+                <span id="hero-badge-text" class="truncate">${initialItem.badge}</span>
               </div>
             </div>
 
-            <h1 id="hero-title" class="text-3xl sm:text-5xl font-extrabold font-heading text-slate-100 tracking-tight leading-tight min-h-[90px] sm:min-h-[120px]">
-              <span id="hero-title-main">${initialItem.titleMain}</span> <br>
-              <span id="hero-title-sub" class="bg-gradient-to-r ${initialItem.gradientClass} bg-clip-text text-transparent">
+            <h1 id="hero-title" class="text-2xl sm:text-3xl md:text-4xl lg:text-3xl xl:text-4xl 2xl:text-5xl font-extrabold font-heading text-slate-100 tracking-tight leading-tight sm:leading-snug break-words transition-all">
+              <span id="hero-title-main" class="block text-slate-100">${initialItem.titleMain}</span>
+              <span id="hero-title-sub" class="block bg-gradient-to-r ${initialItem.gradientClass} bg-clip-text text-transparent pb-0.5">
                 ${initialItem.titleHighlight}
               </span>
             </h1>
 
-            <p id="hero-desc" class="text-sm sm:text-base text-slate-300 font-lora leading-relaxed min-h-[64px]">
+            <p id="hero-desc" class="text-xs sm:text-sm md:text-base text-slate-300 font-lora leading-relaxed break-words">
               ${initialItem.description}
             </p>
 
-            <div class="flex flex-wrap items-center gap-4 pt-2">
-              <a id="hero-shop-link" href="#/product/${initialItem.slug}" class="px-6 py-3.5 rounded-xl btn-gold text-slate-950 font-bold text-sm tracking-wide shadow-lg shadow-amber-500/25 transition flex items-center space-x-2">
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 pt-1 sm:pt-2">
+              <a id="hero-shop-link" href="#/product/${initialItem.slug}" class="w-full sm:w-auto px-5 sm:px-6 py-3 sm:py-3.5 rounded-xl btn-gold text-slate-950 font-bold text-xs sm:text-sm tracking-wide shadow-lg shadow-amber-500/25 transition flex items-center justify-center space-x-2 text-center">
                 <span>Khám phá bộ sưu tập</span>
                 <i class="fa-solid fa-arrow-right text-xs"></i>
               </a>
-              <a href="#/bricks" class="px-6 py-3.5 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 text-amber-400 font-semibold text-sm border border-amber-500/30 transition flex items-center space-x-2">
+              <a href="#/bricks" class="w-full sm:w-auto px-5 sm:px-6 py-3 sm:py-3.5 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 text-amber-400 font-semibold text-xs sm:text-sm border border-amber-500/30 transition flex items-center justify-center space-x-2 text-center">
                 <i class="fa-solid fa-puzzle-piece text-xs"></i>
                 <span>Mua gạch lẻ MOC</span>
               </a>
             </div>
 
-            <!-- Cam kết chất lượng & Thông số vật phẩm -->
-            <div id="hero-stats-wrap" class="grid grid-cols-3 gap-4 pt-6 border-t border-slate-700/60 text-xs text-slate-400">
-              <div>
-                <p id="hero-stat-1-val" class="text-slate-100 font-bold text-base font-sans">${initialItem.stats[0].value}</p>
-                <p id="hero-stat-1-lbl">${initialItem.stats[0].label}</p>
+            <!-- Cam kết chất lượng & Thông số vật phẩm (Tự động co giãn theo màn hình) -->
+            <div id="hero-stats-wrap" class="grid grid-cols-3 gap-2 sm:gap-4 pt-4 sm:pt-5 border-t border-slate-700/60 text-slate-400">
+              <div class="min-w-0">
+                <p id="hero-stat-1-val" class="text-slate-100 font-bold text-sm sm:text-base font-sans truncate">${initialItem.stats[0].value}</p>
+                <p id="hero-stat-1-lbl" class="text-[10px] sm:text-xs truncate">${initialItem.stats[0].label}</p>
               </div>
-              <div>
-                <p id="hero-stat-2-val" class="text-slate-100 font-bold text-base font-sans">${initialItem.stats[1].value}</p>
-                <p id="hero-stat-2-lbl">${initialItem.stats[1].label}</p>
+              <div class="min-w-0">
+                <p id="hero-stat-2-val" class="text-slate-100 font-bold text-sm sm:text-base font-sans truncate">${initialItem.stats[1].value}</p>
+                <p id="hero-stat-2-lbl" class="text-[10px] sm:text-xs truncate">${initialItem.stats[1].label}</p>
               </div>
-              <div>
-                <p id="hero-stat-3-val" class="text-slate-100 font-bold text-base font-sans">${initialItem.stats[2].value}</p>
-                <p id="hero-stat-3-lbl">${initialItem.stats[2].label}</p>
+              <div class="min-w-0">
+                <p id="hero-stat-3-val" class="text-slate-100 font-bold text-sm sm:text-base font-sans truncate">${initialItem.stats[2].value}</p>
+                <p id="hero-stat-3-lbl" class="text-[10px] sm:text-xs truncate">${initialItem.stats[2].label}</p>
               </div>
             </div>
 
-            <!-- CHỈ BÁO SLIDE (DOTS PAGINATION & COUNTER) -->
-            <div class="pt-4 flex items-center space-x-4">
-              <div class="flex items-center space-x-2">
-                <button type="button" class="hero-dot-btn w-8 h-2.5 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 transition-all duration-300 shadow-md shadow-amber-500/30" data-index="0" aria-label="Vật phẩm 1: Siêu xe F1 Technic"></button>
-                <button type="button" class="hero-dot-btn w-2.5 h-2.5 rounded-full bg-slate-700 hover:bg-slate-500 transition-all duration-300" data-index="1" aria-label="Vật phẩm 2: Trạm vũ trụ không gian"></button>
-                <button type="button" class="hero-dot-btn w-2.5 h-2.5 rounded-full bg-slate-700 hover:bg-slate-500 transition-all duration-300" data-index="2" aria-label="Vật phẩm 3: Tháp đồng hồ di sản"></button>
+            <!-- THANH ĐIỀU HƯỚNG SLIDE (DOTS + PREV/NEXT MINI + COUNTER) -->
+            <div class="pt-3 sm:pt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-800/80">
+              <div class="flex items-center space-x-2 sm:space-x-3">
+                <!-- Cặp nút mũi tên mini tiện dụng trên mọi thiết bị, không che chữ -->
+                <div class="flex items-center space-x-1.5 mr-1">
+                  <button id="hero-nav-prev" type="button" aria-label="Slide trước" class="w-8 h-8 rounded-xl bg-slate-800/90 hover:bg-amber-500 text-slate-300 hover:text-slate-950 border border-slate-700 hover:border-amber-400 flex items-center justify-center transition text-xs shadow focus:outline-none">
+                    <i class="fa-solid fa-chevron-left"></i>
+                  </button>
+                  <button id="hero-nav-next" type="button" aria-label="Slide tiếp theo" class="w-8 h-8 rounded-xl bg-slate-800/90 hover:bg-amber-500 text-slate-300 hover:text-slate-950 border border-slate-700 hover:border-amber-400 flex items-center justify-center transition text-xs shadow focus:outline-none">
+                    <i class="fa-solid fa-chevron-right"></i>
+                  </button>
+                </div>
+
+                <!-- Dots Pagination -->
+                <div class="flex items-center space-x-1.5 sm:space-x-2">
+                  <button type="button" class="hero-dot-btn w-7 sm:w-8 h-2 sm:h-2.5 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 transition-all duration-300 shadow-md shadow-amber-500/30" data-index="0" aria-label="Vật phẩm 1: Siêu xe F1 Technic"></button>
+                  <button type="button" class="hero-dot-btn w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-slate-700 hover:bg-slate-500 transition-all duration-300" data-index="1" aria-label="Vật phẩm 2: Trạm vũ trụ không gian"></button>
+                  <button type="button" class="hero-dot-btn w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-slate-700 hover:bg-slate-500 transition-all duration-300" data-index="2" aria-label="Vật phẩm 3: Tháp đồng hồ di sản"></button>
+                </div>
               </div>
-              <span id="hero-slide-counter" class="text-xs font-mono font-bold text-amber-400/90 tracking-wider">
-                01 / 03
-              </span>
-              <span class="text-[11px] text-slate-500 hidden sm:inline">
-                • Dùng phím ← → hoặc bấm nút chuyển
-              </span>
+
+              <div class="flex items-center space-x-3 text-xs">
+                <span id="hero-slide-counter" class="font-mono font-bold text-amber-400/90 tracking-wider">
+                  01 / 03
+                </span>
+                <span class="text-[11px] text-slate-500 hidden xl:inline">
+                  • Phím ← → hoặc vuốt chuyển slide
+                </span>
+              </div>
             </div>
 
           </div>
 
-          <!-- Cột Khung Viewer 3D tương tác -->
-          <div class="lg:col-span-7 relative">
-            <div class="relative w-full h-[380px] sm:h-[460px] rounded-2xl bg-gradient-to-b from-slate-900/90 to-slate-950/95 border border-amber-500/20 overflow-hidden shadow-inner flex flex-col justify-between">
+          <!-- Cột Khung Viewer 3D tương tác (Chiều cao linh hoạt từ mobile đến desktop) -->
+          <div class="lg:col-span-6 xl:col-span-6 relative w-full">
+            <div class="relative w-full h-[280px] sm:h-[360px] md:h-[400px] lg:h-[430px] xl:h-[470px] rounded-2xl bg-gradient-to-b from-slate-900/90 to-slate-950/95 border border-amber-500/20 overflow-hidden shadow-inner flex flex-col justify-between">
 
               <!-- Badge trạng thái 3D -->
-              <div class="p-4 flex items-center justify-between z-10 pointer-events-none">
-                <span class="px-3 py-1 rounded-lg bg-slate-900/80 border border-slate-700 text-[11px] font-semibold text-slate-300">
+              <div class="p-3 sm:p-4 flex items-center justify-between z-10 pointer-events-none">
+                <span class="px-2.5 sm:px-3 py-1 rounded-lg bg-slate-900/80 border border-slate-700 text-[10px] sm:text-[11px] font-semibold text-slate-300">
                   <i class="fa-solid fa-cube text-amber-400 mr-1.5"></i>3D Interactive WebGL
                 </span>
-                <span class="text-[11px] text-slate-400 hidden sm:inline">
-                  Kéo chuột xoay • Cuộn zoom
+                <span class="text-[10px] sm:text-[11px] text-slate-400 hidden sm:inline">
+                  Kéo xoay 360° • Cuộn zoom
                 </span>
               </div>
 
               <!-- Canvas Container Three.js -->
               <div id="hero-3d-container" class="absolute inset-0 w-full h-full"></div>
 
-              <!-- Thanh công cụ điều khiển 3D -->
-              <div class="p-4 flex items-center justify-center space-x-3 z-10 flex-wrap gap-2">
-                <button id="hero-explode-btn" type="button" class="px-4 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/35 border border-amber-500/40 text-amber-300 font-semibold text-xs transition flex items-center space-x-2 backdrop-blur-md shadow-lg">
-                  <i class="fa-solid fa-arrows-split-up-and-left"></i>
+              <!-- Thanh công cụ điều khiển 3D (Thiết kế tinh gọn, chống tràn) -->
+              <div class="p-3 sm:p-4 flex items-center justify-center gap-2 z-10 flex-wrap">
+                <button id="hero-explode-btn" type="button" class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/35 border border-amber-500/40 text-amber-300 font-semibold text-[11px] sm:text-xs transition flex items-center space-x-1.5 backdrop-blur-md shadow-lg">
+                  <i class="fa-solid fa-arrows-split-up-and-left text-[10px]"></i>
                   <span id="hero-explode-text">Bung tách chi tiết</span>
                 </button>
-                <button id="hero-reset-btn" type="button" class="px-3.5 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-600/50 text-slate-300 text-xs transition backdrop-blur-md" title="Đặt lại góc nhìn">
+                <button id="hero-reset-btn" type="button" class="px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-600/50 text-slate-300 text-[11px] sm:text-xs transition backdrop-blur-md" title="Đặt lại góc nhìn">
                   <i class="fa-solid fa-rotate-right"></i>
                 </button>
-                <a id="hero-view-product-btn" href="#/product/${initialItem.slug}" class="px-4 py-2 rounded-xl btn-gold text-slate-950 font-bold text-xs transition flex items-center space-x-1.5 shadow-lg">
+                <a id="hero-view-product-btn" href="#/product/${initialItem.slug}" class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl btn-gold text-slate-950 font-bold text-[11px] sm:text-xs transition flex items-center space-x-1.5 shadow-lg">
                   <span>Chi tiết & Đặt mua</span>
                   <i class="fa-solid fa-cart-plus text-[10px]"></i>
                 </a>
@@ -422,6 +438,8 @@ const HomePage = {
   initCarouselEvents: () => {
     const prevBtn = document.getElementById('hero-arrow-prev');
     const nextBtn = document.getElementById('hero-arrow-next');
+    const navPrevBtn = document.getElementById('hero-nav-prev');
+    const navNextBtn = document.getElementById('hero-nav-next');
     const dotBtns = document.querySelectorAll('.hero-dot-btn');
     const bannerSection = document.getElementById('hero-banner-section');
 
@@ -434,6 +452,20 @@ const HomePage = {
 
     if (nextBtn) {
       nextBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        HomePage.nextSlide();
+      });
+    }
+
+    if (navPrevBtn) {
+      navPrevBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        HomePage.prevSlide();
+      });
+    }
+
+    if (navNextBtn) {
+      navNextBtn.addEventListener('click', (e) => {
         e.preventDefault();
         HomePage.nextSlide();
       });
@@ -464,16 +496,44 @@ const HomePage = {
     };
     window.addEventListener('keydown', HomePage.keyHandler);
 
-    // Tự động chuyển slide sau mỗi 7.5 giây
-    HomePage.startAutoSlide();
+    // Hỗ trợ cảm ứng vuốt (Touch Swipe) linh hoạt cho Mobile / Tablet
+    let touchStartX = 0;
+    let touchStartY = 0;
 
-    // Tạm dừng auto-slide khi người dùng rê chuột vào banner hoặc thao tác xoay 3D
     if (bannerSection) {
       bannerSection.addEventListener('mouseenter', () => HomePage.stopAutoSlide());
       bannerSection.addEventListener('mouseleave', () => HomePage.startAutoSlide());
-      bannerSection.addEventListener('touchstart', () => HomePage.stopAutoSlide(), { passive: true });
-      bannerSection.addEventListener('touchend', () => HomePage.startAutoSlide());
+
+      bannerSection.addEventListener('touchstart', (e) => {
+        HomePage.stopAutoSlide();
+        if (e.changedTouches && e.changedTouches[0]) {
+          touchStartX = e.changedTouches[0].clientX;
+          touchStartY = e.changedTouches[0].clientY;
+        }
+      }, { passive: true });
+
+      bannerSection.addEventListener('touchend', (e) => {
+        HomePage.startAutoSlide();
+        if (e.changedTouches && e.changedTouches[0]) {
+          const touchEndX = e.changedTouches[0].clientX;
+          const touchEndY = e.changedTouches[0].clientY;
+          const diffX = touchEndX - touchStartX;
+          const diffY = touchEndY - touchStartY;
+          
+          // Vuốt ngang dứt khoát (> 40px) và không phải scroll dọc trang
+          if (Math.abs(diffX) > 40 && Math.abs(diffX) > Math.abs(diffY)) {
+            if (diffX < 0) {
+              HomePage.nextSlide();
+            } else {
+              HomePage.prevSlide();
+            }
+          }
+        }
+      });
     }
+
+    // Tự động chuyển slide sau mỗi 7.5 giây
+    HomePage.startAutoSlide();
   },
 
   startAutoSlide: () => {
@@ -521,19 +581,19 @@ const HomePage = {
       const badgeWrap = document.getElementById('hero-badge-wrap');
       if (badgeWrap) {
         badgeWrap.innerHTML = `
-          <div class="inline-flex items-center space-x-2 px-3 py-1.5 rounded-full ${item.badgeClass} text-xs font-semibold">
-            <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
-            <span id="hero-badge-text">${item.badge}</span>
+          <div class="inline-flex items-center space-x-2 px-3 py-1.5 rounded-full ${item.badgeClass} text-[11px] sm:text-xs font-semibold max-w-full truncate shadow-sm">
+            <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping flex-shrink-0"></span>
+            <span id="hero-badge-text" class="truncate">${item.badge}</span>
           </div>
         `;
       }
 
-      // 2. Cập nhật Tiêu đề & Highlight gradient
+      // 2. Cập nhật Tiêu đề & Highlight gradient (Hiển thị khối linh hoạt chống tràn)
       const titleMain = document.getElementById('hero-title-main');
       const titleSub = document.getElementById('hero-title-sub');
       if (titleMain) titleMain.textContent = item.titleMain;
       if (titleSub) {
-        titleSub.className = `bg-gradient-to-r ${item.gradientClass} bg-clip-text text-transparent`;
+        titleSub.className = `block bg-gradient-to-r ${item.gradientClass} bg-clip-text text-transparent pb-0.5`;
         titleSub.textContent = item.titleHighlight;
       }
 
@@ -572,9 +632,9 @@ const HomePage = {
       const dotBtns = document.querySelectorAll('.hero-dot-btn');
       dotBtns.forEach((dot, idx) => {
         if (idx === index) {
-          dot.className = 'hero-dot-btn w-8 h-2.5 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 transition-all duration-300 shadow-md shadow-amber-500/30';
+          dot.className = 'hero-dot-btn w-7 sm:w-8 h-2 sm:h-2.5 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 transition-all duration-300 shadow-md shadow-amber-500/30';
         } else {
-          dot.className = 'hero-dot-btn w-2.5 h-2.5 rounded-full bg-slate-700 hover:bg-slate-500 transition-all duration-300';
+          dot.className = 'hero-dot-btn w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-slate-700 hover:bg-slate-500 transition-all duration-300';
         }
       });
 
