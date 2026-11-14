@@ -1,6 +1,7 @@
 /**
  * Trang Chi Tiết Sản Phẩm (Product Detail)
  * Khung Viewer 3D tương tác độc lập + Nút Bung tách + Tồn kho thật + Thêm giỏ
+ * Tích hợp nút Chỉnh sửa sản phẩm trực tiếp dành cho Admin.
  */
 const ProductPage = {
   viewerInstance: null,
@@ -34,16 +35,31 @@ const ProductPage = {
       const isSale = product.salePrice && product.salePrice < product.price;
       const displayPrice = isSale ? product.salePrice : product.price;
       const isOutOfStock = product.stock <= 0;
+      const isAdminUser = Store.isLoggedIn() && Store.isAdmin();
 
       container.innerHTML = `
-        <!-- BREADCRUMB -->
-        <nav class="flex items-center space-x-2 text-xs text-slate-400 mb-6">
-          <a href="#/" class="hover:text-amber-400 transition">Trang chủ</a>
-          <i class="fa-solid fa-chevron-right text-[10px]"></i>
-          <a href="#/shop" class="hover:text-amber-400 transition">Mô hình Set</a>
-          <i class="fa-solid fa-chevron-right text-[10px]"></i>
-          <span class="text-amber-300 font-medium truncate max-w-xs">${UI.escapeHTML(product.name)}</span>
-        </nav>
+        <!-- BREADCRUMB & NÚT CHỈNH SỬA DÀNH CHO ADMIN -->
+        <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+          <nav class="flex items-center space-x-2 text-xs text-slate-400">
+            <a href="#/" class="hover:text-amber-400 transition">Trang chủ</a>
+            <i class="fa-solid fa-chevron-right text-[10px]"></i>
+            <a href="#/shop" class="hover:text-amber-400 transition">Mô hình Set</a>
+            <i class="fa-solid fa-chevron-right text-[10px]"></i>
+            <span class="text-amber-300 font-medium truncate max-w-xs">${UI.escapeHTML(product.name)}</span>
+          </nav>
+
+          ${isAdminUser ? `
+            <div class="flex items-center space-x-2">
+              <span class="text-[11px] text-amber-400/80 font-mono bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/20">
+                <i class="fa-solid fa-shield-halved mr-1"></i>Chế độ Quản trị
+              </span>
+              <button id="admin-edit-prod-btn" type="button" class="px-4 py-2 rounded-xl btn-gold text-slate-950 font-bold text-xs transition flex items-center space-x-2 shadow-lg shadow-amber-500/20">
+                <i class="fa-solid fa-pen-to-square text-xs"></i>
+                <span>Chỉnh Sửa Sản Phẩm</span>
+              </button>
+            </div>
+          ` : ''}
+        </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start mb-16">
 
@@ -175,6 +191,15 @@ const ProductPage = {
         </div>
       `;
 
+      // Gắn sự kiện nút Chỉnh sửa cho Admin
+      const editBtn = document.getElementById('admin-edit-prod-btn');
+      if (editBtn) {
+        editBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          ProductPage.openEditModal(product, container);
+        });
+      }
+
       // Khởi tạo 3D Viewer
       const canvasContainer = document.getElementById('product-3d-canvas');
       if (canvasContainer && product.model3d) {
@@ -265,6 +290,235 @@ const ProductPage = {
 
     } catch (err) {
       container.innerHTML = UI.renderEmptyState('fa-triangle-exclamation', 'Lỗi tải trang', err.message);
+    }
+  },
+
+  // MODAL CHỈNH SỬA SẢN PHẨM TRỰC TIẾP TỪ TRANG CHI TIẾT
+  openEditModal: (product, container) => {
+    // Xóa modal cũ nếu có
+    const oldModal = document.getElementById('product-edit-modal');
+    if (oldModal) oldModal.remove();
+
+    const categories = [
+      'Technic & Cơ khí',
+      'Kiến trúc & Di sản',
+      'Phương tiện siêu xe',
+      'Vũ trụ & Viễn tưởng',
+      'Robot & Mecha',
+      'Bộ lắp ráp Mini'
+    ];
+
+    const currentImg = (product.images && product.images[0]) || '';
+
+    const modalHtml = `
+      <div id="product-edit-modal" class="fixed inset-0 z-[9990] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto">
+        <div class="glass-panel w-full max-w-2xl p-6 sm:p-8 rounded-3xl relative border border-amber-500/30 shadow-2xl my-8">
+          
+          <!-- Nút đóng -->
+          <button type="button" id="close-edit-modal-btn" class="absolute top-5 right-5 text-slate-400 hover:text-slate-100 transition p-1">
+            <i class="fa-solid fa-xmark text-xl"></i>
+          </button>
+
+          <!-- Tiêu đề Modal -->
+          <div class="border-b border-slate-800 pb-4 mb-6">
+            <span class="text-xs font-bold text-amber-400 uppercase tracking-widest block mb-1">
+              CHẾ ĐỘ QUẢN TRỊ VIÊN
+            </span>
+            <h2 class="text-xl font-extrabold font-heading text-slate-100">
+              Chỉnh Sửa: ${UI.escapeHTML(product.name)}
+            </h2>
+          </div>
+
+          <!-- Form chỉnh sửa sản phẩm -->
+          <form id="product-edit-form" class="space-y-4 text-xs">
+            
+            <!-- Tên sản phẩm -->
+            <div>
+              <label class="block font-semibold text-slate-200 mb-1">Tên sản phẩm *</label>
+              <input type="text" id="edit-p-name" required value="${UI.escapeHTML(product.name || '')}" class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-slate-100 text-xs focus:outline-none focus:border-amber-400 transition" placeholder="Tên sản phẩm">
+            </div>
+
+            <!-- Danh mục & Trạng thái kinh doanh -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block font-semibold text-slate-200 mb-1">Danh mục *</label>
+                <select id="edit-p-category" required class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-amber-400 transition">
+                  ${categories.map(c => `
+                    <option value="${UI.escapeHTML(c)}" ${product.category === c ? 'selected' : ''}>${UI.escapeHTML(c)}</option>
+                  `).join('')}
+                </select>
+              </div>
+
+              <div>
+                <label class="block font-semibold text-slate-200 mb-1">Trạng thái kinh doanh</label>
+                <select id="edit-p-active" class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-amber-400 transition">
+                  <option value="true" ${product.isActive !== false ? 'selected' : ''}>Đang mở bán (Hiển thị)</option>
+                  <option value="false" ${product.isActive === false ? 'selected' : ''}>Tạm ẩn khỏi cửa hàng</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Giá niêm yết & Giá khuyến mãi -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block font-semibold text-slate-200 mb-1">Giá bán niêm yết (VND) *</label>
+                <input type="number" id="edit-p-price" required min="0" step="1000" value="${product.price || 1000000}" class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-slate-100 font-mono text-xs focus:outline-none focus:border-amber-400 transition">
+              </div>
+
+              <div>
+                <label class="block font-semibold text-slate-200 mb-1">Giá khuyến mãi (để trống nếu không giảm)</label>
+                <input type="number" id="edit-p-saleprice" min="0" step="1000" value="${product.salePrice || ''}" class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-slate-100 font-mono text-xs focus:outline-none focus:border-amber-400 transition" placeholder="Ví dụ: 890000">
+              </div>
+            </div>
+
+            <!-- Tồn kho, Số mảnh ghép, Độ tuổi -->
+            <div class="grid grid-cols-3 gap-4">
+              <div>
+                <label class="block font-semibold text-slate-200 mb-1">Số lượng tồn kho *</label>
+                <input type="number" id="edit-p-stock" required min="0" value="${product.stock !== undefined ? product.stock : 20}" class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-slate-100 font-mono text-xs focus:outline-none focus:border-amber-400 transition">
+              </div>
+
+              <div>
+                <label class="block font-semibold text-slate-200 mb-1">Số mảnh ghép</label>
+                <input type="number" id="edit-p-pieces" min="0" value="${product.pieceCount || 500}" class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-slate-100 font-mono text-xs focus:outline-none focus:border-amber-400 transition">
+              </div>
+
+              <div>
+                <label class="block font-semibold text-slate-200 mb-1">Độ tuổi</label>
+                <input type="text" id="edit-p-age" value="${UI.escapeHTML(product.ageRange || '8+')}" class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-slate-100 text-xs focus:outline-none focus:border-amber-400 transition">
+              </div>
+            </div>
+
+            <!-- Mã SKU & Mã QR -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block font-semibold text-slate-200 mb-1">Mã SKU</label>
+                <input type="text" id="edit-p-sku" value="${UI.escapeHTML(product.sku || '')}" class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-slate-100 font-mono text-xs focus:outline-none focus:border-amber-400 transition">
+              </div>
+
+              <div>
+                <label class="block font-semibold text-slate-200 mb-1">Mã QR</label>
+                <input type="text" id="edit-p-qr" value="${UI.escapeHTML(product.qrCode || '')}" class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-slate-100 font-mono text-xs focus:outline-none focus:border-amber-400 transition">
+              </div>
+            </div>
+
+            <!-- Link hình ảnh -->
+            <div>
+              <label class="block font-semibold text-slate-200 mb-1">URL Hình ảnh đại diện</label>
+              <input type="url" id="edit-p-image" value="${UI.escapeHTML(currentImg)}" class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-slate-100 text-xs focus:outline-none focus:border-amber-400 transition" placeholder="https://images.unsplash.com/...">
+            </div>
+
+            <!-- Mô tả chi tiết -->
+            <div>
+              <label class="block font-semibold text-slate-200 mb-1">Mô tả sản phẩm</label>
+              <textarea id="edit-p-desc" rows="3" class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-slate-100 text-xs focus:outline-none focus:border-amber-400 transition resize-none">${UI.escapeHTML(product.description || '')}</textarea>
+            </div>
+
+            <!-- Nút hành động -->
+            <div class="pt-4 border-t border-slate-800 flex items-center justify-end space-x-3">
+              <button type="button" id="cancel-edit-modal-btn" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-semibold transition">
+                Hủy bỏ
+              </button>
+              <button type="submit" id="submit-edit-modal-btn" class="px-6 py-2.5 rounded-xl btn-gold text-slate-950 font-bold transition flex items-center space-x-2 shadow-lg">
+                <i class="fa-solid fa-floppy-disk text-xs"></i>
+                <span>Lưu Thay Đổi</span>
+              </button>
+            </div>
+
+          </form>
+
+        </div>
+      </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+    // Gắn sự kiện đóng modal
+    const closeBtn = document.getElementById('close-edit-modal-btn');
+    const cancelBtn = document.getElementById('cancel-edit-modal-btn');
+    const removeModal = () => {
+      const m = document.getElementById('product-edit-modal');
+      if (m) m.remove();
+    };
+
+    if (closeBtn) closeBtn.addEventListener('click', removeModal);
+    if (cancelBtn) cancelBtn.addEventListener('click', removeModal);
+
+    // Gắn sự kiện submit form
+    const form = document.getElementById('product-edit-form');
+    const submitBtn = document.getElementById('submit-edit-modal-btn');
+
+    if (form) {
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const name = document.getElementById('edit-p-name').value.trim();
+        const category = document.getElementById('edit-p-category').value;
+        const isActive = document.getElementById('edit-p-active').value === 'true';
+        const price = Number(document.getElementById('edit-p-price').value);
+        const salePriceRaw = document.getElementById('edit-p-saleprice').value.trim();
+        const salePrice = salePriceRaw ? Number(salePriceRaw) : null;
+        const stock = Number(document.getElementById('edit-p-stock').value);
+        const pieceCount = Number(document.getElementById('edit-p-pieces').value) || 0;
+        const ageRange = document.getElementById('edit-p-age').value.trim() || '8+';
+        const sku = document.getElementById('edit-p-sku').value.trim();
+        const qrCode = document.getElementById('edit-p-qr').value.trim();
+        const image = document.getElementById('edit-p-image').value.trim();
+        const description = document.getElementById('edit-p-desc').value.trim();
+
+        if (!name || isNaN(price)) {
+          UI.toast('warning', 'Vui lòng điền đầy đủ tên và giá sản phẩm');
+          return;
+        }
+
+        const payload = {
+          name,
+          category,
+          isActive,
+          price,
+          salePrice,
+          stock,
+          pieceCount,
+          ageRange,
+          sku: sku || undefined,
+          qrCode: qrCode || undefined,
+          images: image ? [image] : product.images,
+          description
+        };
+
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = `
+            <div class="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin mr-1.5"></div>
+            <span>Đang lưu...</span>
+          `;
+        }
+
+        try {
+          const updateRes = await API.admin.updateProduct(product._id, payload);
+          if (updateRes.success) {
+            UI.toast('success', `Đã cập nhật sản phẩm "${name}" thành công!`);
+            removeModal();
+
+            // Tải lại dữ liệu trang chi tiết
+            const targetSlug = (updateRes.data && updateRes.data.slug) || product.slug;
+            if (targetSlug !== product.slug) {
+              window.location.hash = `#/product/${targetSlug}`;
+            } else {
+              ProductPage.render(container, { slug: targetSlug });
+            }
+          }
+        } catch (err) {
+          UI.toast('error', err.message || 'Lỗi khi cập nhật sản phẩm');
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = `
+              <i class="fa-solid fa-floppy-disk text-xs mr-1.5"></i>
+              <span>Lưu Thay Đổi</span>
+            `;
+          }
+        }
+      });
     }
   },
 
