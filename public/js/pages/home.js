@@ -1,36 +1,144 @@
 /**
  * Trang chủ ToyBrick Studio
- * Hero 3D Viewer tương tác + Sản phẩm nổi bật + Khối O2O Quét QR + Kho gạch lẻ
+ * Hero Carousel 3D với 3 vật phẩm nổi bật + Các nút mũi tên chuyển qua lại
+ * Khung Viewer 3D tương tác độc lập + Nút Bung tách chi tiết
+ * Khối O2O Quét QR + Kho gạch lẻ Pick-a-Brick
  */
 const HomePage = {
   viewerInstance: null,
+  currentIndex: 0,
+  autoSlideTimer: null,
+  isTransitioning: false,
+
+  featuredItems: [
+    {
+      id: 'f1',
+      slug: 'sieu-xe-f1-technic-vo-dich-2026',
+      badge: 'ĐỘC QUYỀN MÙA GIẢI 2026',
+      badgeClass: 'bg-amber-500/10 border-amber-500/30 text-amber-300',
+      titleMain: 'Siêu Xe F1 Technic',
+      titleHighlight: 'Vô Địch Tốc Độ',
+      gradientClass: 'from-amber-400 via-yellow-200 to-amber-500',
+      description: 'Mô hình 1.639 mảnh ghép chuẩn Technic. Khám phá từng cơ cấu truyền động và khí động học ngay trong không gian 3D tương tác đa chiều.',
+      stats: [
+        { value: '1.639', label: 'Mảnh ghép' },
+        { value: '1:8', label: 'Tỉ lệ chuẩn F1' },
+        { value: '360°', label: 'Tương tác 3D' }
+      ],
+      cameraDistance: 6.8,
+      model3d: {
+        parts: [
+          { name: 'Khung gầm chính', shape: 'box', size: [1.4, 0.25, 4.2], position: [0, 0.2, 0], explodeOffset: [0, -0.6, 0], color: '#111827' },
+          { name: 'Khoang lái Aero', shape: 'box', size: [1.1, 0.45, 1.8], position: [0, 0.5, -0.2], explodeOffset: [0, 0.8, 0], color: '#f59e0b' },
+          { name: 'Vòng bảo vệ Halo', shape: 'cylinder', size: [0.12, 0.12, 1.0], position: [0, 0.85, 0.2], explodeOffset: [0, 1.2, 0], color: '#e2e8f0' },
+          { name: 'Mũi xe khí động', shape: 'box', size: [0.9, 0.25, 1.5], position: [0, 0.28, 2.3], explodeOffset: [0, 0, 1.2], color: '#f59e0b' },
+          { name: 'Cánh gió trước', shape: 'box', size: [2.6, 0.1, 0.7], position: [0, 0.15, 3.0], explodeOffset: [0, -0.2, 1.6], color: '#0284c7' },
+          { name: 'Cánh gió DRS sau', shape: 'box', size: [2.2, 0.5, 0.6], position: [0, 1.0, -2.1], explodeOffset: [0, 1.4, -1.2], color: '#f59e0b' },
+          { name: 'Giá đỡ cánh sau', shape: 'box', size: [0.3, 0.7, 0.2], position: [0, 0.6, -2.0], explodeOffset: [0, 0.5, -0.8], color: '#334155' },
+          { name: 'Bánh trước (Trái)', shape: 'cylinder', size: [0.55, 0.55, 0.45], position: [-1.3, 0.35, 1.8], explodeOffset: [-1.2, 0, 0.2], color: '#1e293b' },
+          { name: 'Bánh trước (Phải)', shape: 'cylinder', size: [0.55, 0.55, 0.45], position: [1.3, 0.35, 1.8], explodeOffset: [1.2, 0, 0.2], color: '#1e293b' },
+          { name: 'Bánh sau (Trái)', shape: 'cylinder', size: [0.65, 0.65, 0.6], position: [-1.4, 0.4, -1.6], explodeOffset: [-1.3, 0, -0.3], color: '#1e293b' },
+          { name: 'Bánh sau (Phải)', shape: 'cylinder', size: [0.65, 0.65, 0.6], position: [1.4, 0.4, -1.6], explodeOffset: [1.3, 0, -0.3], color: '#1e293b' },
+          { name: 'Khối động cơ V6 Turbo', shape: 'box', size: [0.9, 0.6, 1.1], position: [0, 0.55, -1.1], explodeOffset: [0, 1.0, -0.4], color: '#ef4444' }
+        ]
+      }
+    },
+    {
+      id: 'space',
+      slug: 'tram-vu-tru-khong-gian-orbital-x',
+      badge: 'THÁM HIỂM THIÊN HÀ 2026',
+      badgeClass: 'bg-sky-500/10 border-sky-500/30 text-sky-300',
+      titleMain: 'Trạm Vũ Trụ Không Gian',
+      titleHighlight: 'Orbital-X Tiên Tiến',
+      gradientClass: 'from-sky-400 via-cyan-200 to-blue-500',
+      description: 'Tái hiện chân thực trạm nghiên cứu quỹ đạo với 4 module khoang khoa học, tấm pin năng lượng mặt trời xoay 360 độ và đài quan sát kính vòm thiên văn.',
+      stats: [
+        { value: '1.250', label: 'Mảnh ghép' },
+        { value: '4 Khoang', label: 'Module vi mô' },
+        { value: '360°', label: 'Pin mặt trời' }
+      ],
+      cameraDistance: 6.5,
+      model3d: {
+        parts: [
+          { name: 'Khoang lõi trung tâm', shape: 'cylinder', size: [0.8, 0.8, 2.5], position: [0, 0, 0], explodeOffset: [0, 0, 0], color: '#e2e8f0' },
+          { name: 'Module sinh hoạt Alpha', shape: 'box', size: [1.0, 1.0, 1.2], position: [-1.5, 0, 0], explodeOffset: [-1.2, 0, 0], color: '#38bdf8' },
+          { name: 'Module nghiên cứu Beta', shape: 'box', size: [1.0, 1.0, 1.2], position: [1.5, 0, 0], explodeOffset: [1.2, 0, 0], color: '#38bdf8' },
+          { name: 'Tấm pin mặt trời Cánh Trái', shape: 'box', size: [3.0, 0.08, 1.0], position: [0, 1.6, 0], explodeOffset: [0, 1.2, 0], color: '#0284c7' },
+          { name: 'Tấm pin mặt trời Cánh Phải', shape: 'box', size: [3.0, 0.08, 1.0], position: [0, -1.6, 0], explodeOffset: [0, -1.2, 0], color: '#0284c7' },
+          { name: 'Đài quan sát Kính Vòm', shape: 'cylinder', size: [0.6, 0.6, 0.6], position: [0, 0, 1.5], explodeOffset: [0, 0, 1.0], color: '#f59e0b' }
+        ]
+      }
+    },
+    {
+      id: 'tower',
+      slug: 'thap-dong-ho-di-san-co-dien',
+      badge: 'KIỆT TÁC KIẾN TRÚC GOTHIC',
+      badgeClass: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300',
+      titleMain: 'Tháp Đồng Hồ Di Sản',
+      titleHighlight: 'Kỳ Quan Gothic Cổ Điển',
+      gradientClass: 'from-amber-300 via-yellow-100 to-emerald-400',
+      description: 'Tác phẩm kiến trúc Gothic tinh xảo với hơn 2.100 mảnh ghép. Mặt đồng hồ 4 hướng phát quang trong đêm, mái vòm bằng đồng cổ kính và nội thất cơ cấu bánh răng chuyển động.',
+      stats: [
+        { value: '2.160', label: 'Mảnh ghép' },
+        { value: '4 Hướng', label: 'Mặt đồng hồ' },
+        { value: 'Chuẩn', label: 'Tỉ lệ Gothic' }
+      ],
+      cameraDistance: 8.5,
+      model3d: {
+        parts: [
+          { name: 'Chân đế móng đá', shape: 'box', size: [2.2, 0.8, 2.2], position: [0, -1.6, 0], explodeOffset: [0, -0.6, 0], color: '#64748b' },
+          { name: 'Thân tháp tầng 1', shape: 'box', size: [1.8, 1.6, 1.8], position: [0, -0.4, 0], explodeOffset: [0, -0.2, 0], color: '#d97706' },
+          { name: 'Thân tháp tầng 2 hoa văn', shape: 'box', size: [1.6, 1.4, 1.6], position: [0, 1.1, 0], explodeOffset: [0, 0.4, 0], color: '#b45309' },
+          { name: 'Hộp mặt đồng hồ 4 hướng', shape: 'box', size: [1.7, 1.0, 1.7], position: [0, 2.3, 0], explodeOffset: [0, 0.9, 0], color: '#fef08a' },
+          { name: 'Mái chóp Gothic vươn cao', shape: 'cylinder', size: [1.2, 0.1, 1.8], position: [0, 3.6, 0], explodeOffset: [0, 1.6, 0], color: '#0f766e' }
+        ]
+      }
+    }
+  ],
 
   render: async (container) => {
-    container.innerHTML = `
-      <!-- HERO SECTION VỚI VIEWER 3D -->
-      <section class="relative mb-16 rounded-3xl overflow-hidden glass-panel border border-amber-500/25 p-6 sm:p-10 shadow-2xl">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+    HomePage.currentIndex = 0;
+    const initialItem = HomePage.featuredItems[0];
 
-          <!-- Cột thông tin giới thiệu -->
-          <div class="lg:col-span-5 space-y-6 z-10">
-            <div class="inline-flex items-center space-x-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-semibold">
-              <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
-              <span>ĐỘC QUYỀN MÙA GIẢI 2026</span>
+    container.innerHTML = `
+      <!-- HERO SECTION BANNER VỚI CAROUSEL 3 VẬT PHẨM VÀ NÚT CHUYỂN QUA LẠI -->
+      <section id="hero-banner-section" class="relative mb-16 rounded-3xl overflow-hidden glass-panel border border-amber-500/25 p-6 sm:p-10 shadow-2xl group/banner">
+        
+        <!-- NÚT MŨI TÊN CHUYỂN SANG TRÁI (PREV) -->
+        <button id="hero-arrow-prev" type="button" aria-label="Vật phẩm trước" class="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-slate-900/90 hover:bg-amber-500 text-slate-300 hover:text-slate-950 border border-amber-500/30 hover:border-amber-400 shadow-2xl backdrop-blur-md flex items-center justify-center transition-all duration-300 group/prev focus:outline-none focus:ring-2 focus:ring-amber-400">
+          <i class="fa-solid fa-chevron-left text-sm sm:text-base group-hover/prev:-translate-x-0.5 transition-transform"></i>
+        </button>
+
+        <!-- NÚT MŨI TÊN CHUYỂN SANG PHẢI (NEXT) -->
+        <button id="hero-arrow-next" type="button" aria-label="Vật phẩm kế tiếp" class="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-slate-900/90 hover:bg-amber-500 text-slate-300 hover:text-slate-950 border border-amber-500/30 hover:border-amber-400 shadow-2xl backdrop-blur-md flex items-center justify-center transition-all duration-300 group/next focus:outline-none focus:ring-2 focus:ring-amber-400">
+          <i class="fa-solid fa-chevron-right text-sm sm:text-base group-hover/next:translate-x-0.5 transition-transform"></i>
+        </button>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center px-2 sm:px-6">
+
+          <!-- Cột thông tin giới thiệu vật phẩm -->
+          <div id="hero-info-col" class="lg:col-span-5 space-y-6 z-10 transition-opacity duration-300">
+            
+            <div id="hero-badge-wrap">
+              <div class="inline-flex items-center space-x-2 px-3 py-1.5 rounded-full ${initialItem.badgeClass} text-xs font-semibold">
+                <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+                <span id="hero-badge-text">${initialItem.badge}</span>
+              </div>
             </div>
 
-            <h1 class="text-3xl sm:text-5xl font-extrabold font-heading text-slate-100 tracking-tight leading-tight">
-              Siêu Xe F1 Technic <br>
-              <span class="bg-gradient-to-r from-amber-400 via-yellow-200 to-amber-500 bg-clip-text text-transparent">
-                Vô Địch Tốc Độ
+            <h1 id="hero-title" class="text-3xl sm:text-5xl font-extrabold font-heading text-slate-100 tracking-tight leading-tight min-h-[90px] sm:min-h-[120px]">
+              <span id="hero-title-main">${initialItem.titleMain}</span> <br>
+              <span id="hero-title-sub" class="bg-gradient-to-r ${initialItem.gradientClass} bg-clip-text text-transparent">
+                ${initialItem.titleHighlight}
               </span>
             </h1>
 
-            <p class="text-sm sm:text-base text-slate-300 font-lora leading-relaxed">
-              Mô hình 1.639 mảnh ghép chuẩn Technic. Khám phá từng cơ cấu truyền động và khí động học ngay trong không gian 3D tương tác đa chiều.
+            <p id="hero-desc" class="text-sm sm:text-base text-slate-300 font-lora leading-relaxed min-h-[64px]">
+              ${initialItem.description}
             </p>
 
             <div class="flex flex-wrap items-center gap-4 pt-2">
-              <a href="#/shop" class="px-6 py-3.5 rounded-xl btn-gold text-slate-950 font-bold text-sm tracking-wide shadow-lg shadow-amber-500/25 transition flex items-center space-x-2">
+              <a id="hero-shop-link" href="#/product/${initialItem.slug}" class="px-6 py-3.5 rounded-xl btn-gold text-slate-950 font-bold text-sm tracking-wide shadow-lg shadow-amber-500/25 transition flex items-center space-x-2">
                 <span>Khám phá bộ sưu tập</span>
                 <i class="fa-solid fa-arrow-right text-xs"></i>
               </a>
@@ -40,21 +148,37 @@ const HomePage = {
               </a>
             </div>
 
-            <!-- Cam kết chất lượng -->
-            <div class="grid grid-cols-3 gap-4 pt-6 border-t border-slate-700/60 text-xs text-slate-400">
+            <!-- Cam kết chất lượng & Thông số vật phẩm -->
+            <div id="hero-stats-wrap" class="grid grid-cols-3 gap-4 pt-6 border-t border-slate-700/60 text-xs text-slate-400">
               <div>
-                <p class="text-slate-100 font-bold text-base font-sans">1.639</p>
-                <p>Mảnh ghép</p>
+                <p id="hero-stat-1-val" class="text-slate-100 font-bold text-base font-sans">${initialItem.stats[0].value}</p>
+                <p id="hero-stat-1-lbl">${initialItem.stats[0].label}</p>
               </div>
               <div>
-                <p class="text-slate-100 font-bold text-base font-sans">1:8</p>
-                <p>Tỉ lệ chuẩn F1</p>
+                <p id="hero-stat-2-val" class="text-slate-100 font-bold text-base font-sans">${initialItem.stats[1].value}</p>
+                <p id="hero-stat-2-lbl">${initialItem.stats[1].label}</p>
               </div>
               <div>
-                <p class="text-slate-100 font-bold text-base font-sans">360°</p>
-                <p>Tương tác 3D</p>
+                <p id="hero-stat-3-val" class="text-slate-100 font-bold text-base font-sans">${initialItem.stats[2].value}</p>
+                <p id="hero-stat-3-lbl">${initialItem.stats[2].label}</p>
               </div>
             </div>
+
+            <!-- CHỈ BÁO SLIDE (DOTS PAGINATION & COUNTER) -->
+            <div class="pt-4 flex items-center space-x-4">
+              <div class="flex items-center space-x-2">
+                <button type="button" class="hero-dot-btn w-8 h-2.5 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 transition-all duration-300 shadow-md shadow-amber-500/30" data-index="0" aria-label="Vật phẩm 1: Siêu xe F1 Technic"></button>
+                <button type="button" class="hero-dot-btn w-2.5 h-2.5 rounded-full bg-slate-700 hover:bg-slate-500 transition-all duration-300" data-index="1" aria-label="Vật phẩm 2: Trạm vũ trụ không gian"></button>
+                <button type="button" class="hero-dot-btn w-2.5 h-2.5 rounded-full bg-slate-700 hover:bg-slate-500 transition-all duration-300" data-index="2" aria-label="Vật phẩm 3: Tháp đồng hồ di sản"></button>
+              </div>
+              <span id="hero-slide-counter" class="text-xs font-mono font-bold text-amber-400/90 tracking-wider">
+                01 / 03
+              </span>
+              <span class="text-[11px] text-slate-500 hidden sm:inline">
+                • Dùng phím ← → hoặc bấm nút chuyển
+              </span>
+            </div>
+
           </div>
 
           <!-- Cột Khung Viewer 3D tương tác -->
@@ -75,15 +199,15 @@ const HomePage = {
               <div id="hero-3d-container" class="absolute inset-0 w-full h-full"></div>
 
               <!-- Thanh công cụ điều khiển 3D -->
-              <div class="p-4 flex items-center justify-center space-x-3 z-10">
-                <button id="hero-explode-btn" class="px-4 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/35 border border-amber-500/40 text-amber-300 font-semibold text-xs transition flex items-center space-x-2 backdrop-blur-md shadow-lg">
+              <div class="p-4 flex items-center justify-center space-x-3 z-10 flex-wrap gap-2">
+                <button id="hero-explode-btn" type="button" class="px-4 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/35 border border-amber-500/40 text-amber-300 font-semibold text-xs transition flex items-center space-x-2 backdrop-blur-md shadow-lg">
                   <i class="fa-solid fa-arrows-split-up-and-left"></i>
                   <span id="hero-explode-text">Bung tách chi tiết</span>
                 </button>
-                <button id="hero-reset-btn" class="px-3.5 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-600/50 text-slate-300 text-xs transition backdrop-blur-md" title="Đặt lại góc nhìn">
+                <button id="hero-reset-btn" type="button" class="px-3.5 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-600/50 text-slate-300 text-xs transition backdrop-blur-md" title="Đặt lại góc nhìn">
                   <i class="fa-solid fa-rotate-right"></i>
                 </button>
-                <a href="#/product/sieu-xe-f1-technic-vo-dich-2026" class="px-4 py-2 rounded-xl btn-gold text-slate-950 font-bold text-xs transition flex items-center space-x-1.5 shadow-lg">
+                <a id="hero-view-product-btn" href="#/product/${initialItem.slug}" class="px-4 py-2 rounded-xl btn-gold text-slate-950 font-bold text-xs transition flex items-center space-x-1.5 shadow-lg">
                   <span>Chi tiết & Đặt mua</span>
                   <i class="fa-solid fa-cart-plus text-[10px]"></i>
                 </a>
@@ -150,7 +274,9 @@ const HomePage = {
         <div class="flex flex-col md:flex-row items-center justify-between gap-6">
           <div class="space-y-2 max-w-xl">
             <span class="text-xs font-bold text-amber-400 uppercase tracking-widest">Kho MOC Tự Do</span>
-            <h3 class="text-2xl sm:text-3xl font-heading font-extrabold text-slate-100">Pick-a-Brick: Tìm Từng Viên Gạch Riêng Lẻ</h3>
+            <h3 class="text-2xl sm:text-3xl font-heading font-extrabold text-slate-100 md:whitespace-nowrap">
+              Pick-a-Brick: Tìm Từng Viên Gạch Riêng Lẻ
+            </h3>
             <p class="text-sm text-slate-300 font-lora">
               Bị thiếu một chốt pin, bánh răng cơ khí hay viên ngọc pha lê trong suốt? Kho gạch lẻ chuẩn mã #3001, #3002 luôn có sẵn số lượng lớn cho bạn.
             </p>
@@ -163,13 +289,12 @@ const HomePage = {
       </section>
     `;
 
-    // 1. Tải dữ liệu F1 và khởi động 3D Viewer
+    // 1. Khởi tạo 3D Viewer ban đầu
     try {
-      const f1Res = await API.products.getBySlug('sieu-xe-f1-technic-vo-dich-2026');
       const container3D = document.getElementById('hero-3d-container');
-      if (container3D && f1Res.success && f1Res.data) {
-        HomePage.viewerInstance = new ToyBrickViewer3D(container3D, f1Res.data.model3d, {
-          cameraDistance: 6.8,
+      if (container3D) {
+        HomePage.viewerInstance = new ToyBrickViewer3D(container3D, initialItem.model3d, {
+          cameraDistance: initialItem.cameraDistance,
           autoRotateSpeed: 0.004
         });
 
@@ -179,22 +304,32 @@ const HomePage = {
 
         if (explodeBtn) {
           explodeBtn.addEventListener('click', () => {
-            const isExploded = HomePage.viewerInstance.toggleExplode();
-            explodeText.textContent = isExploded ? 'Gộp chi tiết lại' : 'Bung tách chi tiết';
+            if (HomePage.viewerInstance) {
+              const isExploded = HomePage.viewerInstance.toggleExplode();
+              explodeText.textContent = isExploded ? 'Gộp chi tiết lại' : 'Bung tách chi tiết';
+            }
           });
         }
 
         if (resetBtn) {
           resetBtn.addEventListener('click', () => {
-            HomePage.viewerInstance.resetView();
+            if (HomePage.viewerInstance) {
+              HomePage.viewerInstance.resetView();
+            }
           });
         }
       }
+
+      // Thử đồng bộ model 3D mới nhất từ Database nếu có
+      HomePage.syncProductsData();
     } catch (e) {
       console.warn('[Home Viewer Error]', e.message);
     }
 
-    // 2. Nạp danh sách sản phẩm nổi bật
+    // 2. Gắn sự kiện nút Mũi tên và Dots chuyển slide
+    HomePage.initCarouselEvents();
+
+    // 3. Nạp danh sách sản phẩm nổi bật
     try {
       const prodRes = await API.products.getAll({ limit: 4, sort: 'rating' });
       const prodContainer = document.getElementById('featured-products-container');
@@ -262,7 +397,216 @@ const HomePage = {
     }
   },
 
+  // Đồng bộ model 3D từ cơ sở dữ liệu nếu có chỉnh sửa từ Admin
+  syncProductsData: async () => {
+    try {
+      const promises = HomePage.featuredItems.map(item => API.products.getBySlug(item.slug));
+      const results = await Promise.allSettled(promises);
+      results.forEach((res, idx) => {
+        if (res.status === 'fulfilled' && res.value && res.value.success && res.value.data) {
+          const dbProd = res.value.data;
+          if (dbProd.model3d && dbProd.model3d.parts && dbProd.model3d.parts.length > 0) {
+            HomePage.featuredItems[idx].model3d = dbProd.model3d;
+          }
+          if (dbProd.pieceCount) {
+            HomePage.featuredItems[idx].stats[0].value = Number(dbProd.pieceCount).toLocaleString('vi-VN');
+          }
+        }
+      });
+    } catch (err) {
+      console.warn('[Sync Products Notice]', err.message);
+    }
+  },
+
+  // Khởi tạo các sự kiện tương tác và Carousel
+  initCarouselEvents: () => {
+    const prevBtn = document.getElementById('hero-arrow-prev');
+    const nextBtn = document.getElementById('hero-arrow-next');
+    const dotBtns = document.querySelectorAll('.hero-dot-btn');
+    const bannerSection = document.getElementById('hero-banner-section');
+
+    if (prevBtn) {
+      prevBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        HomePage.prevSlide();
+      });
+    }
+
+    if (nextBtn) {
+      nextBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        HomePage.nextSlide();
+      });
+    }
+
+    dotBtns.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const targetIndex = parseInt(btn.dataset.index, 10);
+        if (!isNaN(targetIndex) && targetIndex !== HomePage.currentIndex) {
+          HomePage.goToSlide(targetIndex);
+        }
+      });
+    });
+
+    // Bắt phím điều hướng bàn phím mũi tên Trái / Phải
+    HomePage.keyHandler = (e) => {
+      // Chỉ kích hoạt khi đang ở trang chủ và không gõ input/textarea
+      if (window.location.hash && window.location.hash !== '#/' && window.location.hash !== '#') return;
+      const tag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+      if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+
+      if (e.key === 'ArrowLeft') {
+        HomePage.prevSlide();
+      } else if (e.key === 'ArrowRight') {
+        HomePage.nextSlide();
+      }
+    };
+    window.addEventListener('keydown', HomePage.keyHandler);
+
+    // Tự động chuyển slide sau mỗi 7.5 giây
+    HomePage.startAutoSlide();
+
+    // Tạm dừng auto-slide khi người dùng rê chuột vào banner hoặc thao tác xoay 3D
+    if (bannerSection) {
+      bannerSection.addEventListener('mouseenter', () => HomePage.stopAutoSlide());
+      bannerSection.addEventListener('mouseleave', () => HomePage.startAutoSlide());
+      bannerSection.addEventListener('touchstart', () => HomePage.stopAutoSlide(), { passive: true });
+      bannerSection.addEventListener('touchend', () => HomePage.startAutoSlide());
+    }
+  },
+
+  startAutoSlide: () => {
+    HomePage.stopAutoSlide();
+    HomePage.autoSlideTimer = setInterval(() => {
+      HomePage.nextSlide();
+    }, 7500);
+  },
+
+  stopAutoSlide: () => {
+    if (HomePage.autoSlideTimer) {
+      clearInterval(HomePage.autoSlideTimer);
+      HomePage.autoSlideTimer = null;
+    }
+  },
+
+  prevSlide: () => {
+    const total = HomePage.featuredItems.length;
+    const nextIndex = (HomePage.currentIndex - 1 + total) % total;
+    HomePage.goToSlide(nextIndex);
+  },
+
+  nextSlide: () => {
+    const total = HomePage.featuredItems.length;
+    const nextIndex = (HomePage.currentIndex + 1) % total;
+    HomePage.goToSlide(nextIndex);
+  },
+
+  goToSlide: (index) => {
+    if (index === HomePage.currentIndex && !HomePage.isTransitioning) return;
+    const item = HomePage.featuredItems[index];
+    if (!item) return;
+
+    HomePage.currentIndex = index;
+    HomePage.isTransitioning = true;
+
+    // Cập nhật giao diện thông tin vật phẩm với hiệu ứng mượt mà
+    const infoCol = document.getElementById('hero-info-col');
+    if (infoCol) {
+      infoCol.style.opacity = '0.4';
+    }
+
+    setTimeout(() => {
+      // 1. Cập nhật Badge
+      const badgeWrap = document.getElementById('hero-badge-wrap');
+      if (badgeWrap) {
+        badgeWrap.innerHTML = `
+          <div class="inline-flex items-center space-x-2 px-3 py-1.5 rounded-full ${item.badgeClass} text-xs font-semibold">
+            <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+            <span id="hero-badge-text">${item.badge}</span>
+          </div>
+        `;
+      }
+
+      // 2. Cập nhật Tiêu đề & Highlight gradient
+      const titleMain = document.getElementById('hero-title-main');
+      const titleSub = document.getElementById('hero-title-sub');
+      if (titleMain) titleMain.textContent = item.titleMain;
+      if (titleSub) {
+        titleSub.className = `bg-gradient-to-r ${item.gradientClass} bg-clip-text text-transparent`;
+        titleSub.textContent = item.titleHighlight;
+      }
+
+      // 3. Cập nhật Mô tả
+      const desc = document.getElementById('hero-desc');
+      if (desc) desc.textContent = item.description;
+
+      // 4. Cập nhật Link sản phẩm
+      const shopLink = document.getElementById('hero-shop-link');
+      const viewProductBtn = document.getElementById('hero-view-product-btn');
+      const productHref = `#/product/${item.slug}`;
+      if (shopLink) shopLink.href = productHref;
+      if (viewProductBtn) viewProductBtn.href = productHref;
+
+      // 5. Cập nhật Thông số (Stats)
+      const s1Val = document.getElementById('hero-stat-1-val');
+      const s1Lbl = document.getElementById('hero-stat-1-lbl');
+      const s2Val = document.getElementById('hero-stat-2-val');
+      const s2Lbl = document.getElementById('hero-stat-2-lbl');
+      const s3Val = document.getElementById('hero-stat-3-val');
+      const s3Lbl = document.getElementById('hero-stat-3-lbl');
+
+      if (s1Val) s1Val.textContent = item.stats[0].value;
+      if (s1Lbl) s1Lbl.textContent = item.stats[0].label;
+      if (s2Val) s2Val.textContent = item.stats[1].value;
+      if (s2Lbl) s2Lbl.textContent = item.stats[1].label;
+      if (s3Val) s3Val.textContent = item.stats[2].value;
+      if (s3Lbl) s3Lbl.textContent = item.stats[2].label;
+
+      // 6. Cập nhật Slide Counter và Dots Pagination
+      const counter = document.getElementById('hero-slide-counter');
+      if (counter) {
+        counter.textContent = `0${index + 1} / 03`;
+      }
+
+      const dotBtns = document.querySelectorAll('.hero-dot-btn');
+      dotBtns.forEach((dot, idx) => {
+        if (idx === index) {
+          dot.className = 'hero-dot-btn w-8 h-2.5 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 transition-all duration-300 shadow-md shadow-amber-500/30';
+        } else {
+          dot.className = 'hero-dot-btn w-2.5 h-2.5 rounded-full bg-slate-700 hover:bg-slate-500 transition-all duration-300';
+        }
+      });
+
+      // 7. Nạp Model 3D mới vào Viewer
+      if (HomePage.viewerInstance && item.model3d) {
+        HomePage.viewerInstance.loadModel(item.model3d, {
+          cameraDistance: item.cameraDistance
+        });
+
+        // Đặt lại chữ nút bung tách
+        const explodeText = document.getElementById('hero-explode-text');
+        if (explodeText) {
+          explodeText.textContent = 'Bung tách chi tiết';
+        }
+      }
+
+      if (infoCol) {
+        infoCol.style.opacity = '1';
+      }
+
+      HomePage.isTransitioning = false;
+    }, 150);
+  },
+
   destroy: () => {
+    HomePage.stopAutoSlide();
+
+    if (HomePage.keyHandler) {
+      window.removeEventListener('keydown', HomePage.keyHandler);
+      HomePage.keyHandler = null;
+    }
+
     if (HomePage.viewerInstance) {
       HomePage.viewerInstance.destroy();
       HomePage.viewerInstance = null;

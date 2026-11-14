@@ -274,6 +274,45 @@ class ToyBrickViewer3D {
     this.updateCameraPosition();
   }
 
+  loadModel(modelData, options = {}) {
+    if (this.isExploded) {
+      this.isExploded = false;
+      this.explodeFactor = 0;
+      this.targetExplodeFactor = 0;
+    }
+
+    // Dọn dẹp các mesh cũ
+    this.meshParts.forEach(mesh => {
+      if (mesh.geometry) mesh.geometry.dispose();
+      if (mesh.material) {
+        if (Array.isArray(mesh.material)) {
+          mesh.material.forEach(m => m.dispose());
+        } else {
+          mesh.material.dispose();
+        }
+      }
+    });
+    this.meshParts = [];
+
+    // Xóa các mesh con trong modelGroup
+    if (this.modelGroup) {
+      while (this.modelGroup.children.length > 0) {
+        const obj = this.modelGroup.children[0];
+        this.modelGroup.remove(obj);
+      }
+      this.modelGroup.position.set(0, 0, 0);
+      this.modelGroup.rotation.set(0, 0, 0);
+    }
+
+    this.partsData = (modelData && modelData.parts) ? modelData.parts : [];
+    if (options.cameraDistance) {
+      this.options.cameraDistance = options.cameraDistance;
+      this.spherical.radius = options.cameraDistance;
+    }
+    this.resetView();
+    this.buildParts();
+  }
+
   animate() {
     this.animationId = requestAnimationFrame(this.animate);
 
