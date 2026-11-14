@@ -266,19 +266,22 @@ const AdminPage = {
   },
 
   // 2. QUẢN LÝ SẢN PHẨM
+  cachedProducts: [],
+
   renderProducts: async (container) => {
     try {
-      const res = await API.admin.getProducts({ limit: 50 });
+      const res = await API.admin.getProducts({ limit: 100 });
       const products = (res.success && res.data) ? res.data.products : [];
+      AdminPage.cachedProducts = products;
 
       container.innerHTML = `
         <div class="glass-panel rounded-3xl p-6 sm:p-8 border border-amber-500/20 space-y-6">
-          <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
             <div>
               <h2 class="text-base font-bold font-heading text-slate-100">Danh Sách Mô Hình Set (${products.length})</h2>
-              <p class="text-xs text-slate-400">Quản lý giá, khuyến mãi, tồn kho và chi tiết mô hình 3D</p>
+              <p class="text-xs text-slate-400">Xem thông tin, chỉnh sửa giá bán, khuyến mãi, tồn kho và mô tả sản phẩm</p>
             </div>
-            <button onclick="AdminPage.openProductModal()" class="px-4 py-2.5 rounded-xl btn-gold text-slate-950 font-bold text-xs transition flex items-center space-x-2">
+            <button onclick="AdminPage.openProductModal()" class="px-4 py-2.5 rounded-xl btn-gold text-slate-950 font-bold text-xs transition flex items-center space-x-2 shadow-md">
               <i class="fa-solid fa-plus text-xs"></i>
               <span>Thêm Sản Phẩm Mới</span>
             </button>
@@ -293,6 +296,7 @@ const AdminPage = {
                   <th class="py-3 px-4">Giá bán</th>
                   <th class="py-3 px-4">Tồn kho</th>
                   <th class="py-3 px-4">SKU / QR</th>
+                  <th class="py-3 px-4 text-center">Trạng thái</th>
                   <th class="py-3 px-4 text-right">Thao tác</th>
                 </tr>
               </thead>
@@ -300,27 +304,40 @@ const AdminPage = {
                 ${products.map(p => `
                   <tr class="hover:bg-slate-900/40 transition">
                     <td class="py-3 px-4 font-bold text-slate-100 flex items-center space-x-3">
-                      <div class="w-10 h-10 rounded-lg bg-slate-950 overflow-hidden flex-shrink-0">
-                        <img src="${UI.escapeHTML((p.images && p.images[0]) || '')}" class="w-full h-full object-cover">
+                      <div class="w-11 h-11 rounded-lg bg-slate-950 overflow-hidden flex-shrink-0 border border-slate-800">
+                        <img src="${UI.escapeHTML((p.images && p.images[0]) || 'https://images.unsplash.com/photo-1585366119957-e9730b6d0f60?auto=format&fit=crop&w=150&q=80')}" class="w-full h-full object-cover">
                       </div>
                       <div>
-                        <span>${UI.escapeHTML(p.name)}</span>
-                        <span class="text-[10px] text-slate-500 block font-normal">${p.pieceCount} mảnh</span>
+                        <a href="#/product/${UI.escapeHTML(p.slug)}" class="hover:text-amber-400 transition" target="_blank" title="Xem trang sản phẩm">
+                          ${UI.escapeHTML(p.name)}
+                          <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-slate-500 ml-1"></i>
+                        </a>
+                        <span class="text-[10px] text-slate-400 block font-normal">${p.pieceCount} mảnh • ${UI.escapeHTML(p.ageRange || '8+')}</span>
                       </div>
                     </td>
                     <td class="py-3 px-4">${UI.escapeHTML(p.category)}</td>
                     <td class="py-3 px-4 font-mono font-bold text-amber-300">
-                      ${UI.formatCurrency(p.salePrice || p.price)}
+                      <div>${UI.formatCurrency(p.salePrice || p.price)}</div>
+                      ${p.salePrice ? `<div class="text-[10px] text-slate-500 line-through">${UI.formatCurrency(p.price)}</div>` : ''}
                     </td>
                     <td class="py-3 px-4">
                       <span class="px-2 py-0.5 rounded text-[11px] font-bold ${p.stock <= 5 ? 'bg-rose-500/20 text-rose-400' : 'bg-emerald-500/20 text-emerald-400'}">
                         ${p.stock}
                       </span>
                     </td>
-                    <td class="py-3 px-4 font-mono text-slate-400 text-[11px]">${UI.escapeHTML(p.sku || '')}</td>
-                    <td class="py-3 px-4 text-right space-x-2">
-                      <button onclick="AdminPage.openProductModal('${p._id}')" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 transition" title="Sửa sản phẩm">
-                        <i class="fa-solid fa-pen-to-square"></i>
+                    <td class="py-3 px-4 font-mono text-slate-400 text-[11px]">
+                      <div>${UI.escapeHTML(p.sku || 'N/A')}</div>
+                      <div class="text-[10px] text-amber-400/80">${UI.escapeHTML(p.qrCode || '')}</div>
+                    </td>
+                    <td class="py-3 px-4 text-center">
+                      <span class="px-2 py-0.5 rounded text-[10px] font-bold ${p.isActive !== false ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-800 text-slate-400'}">
+                        ${p.isActive !== false ? 'Đang bán' : 'Tạm ẩn'}
+                      </span>
+                    </td>
+                    <td class="py-3 px-4 text-right space-x-2 whitespace-nowrap">
+                      <button onclick="AdminPage.openProductModal('${p._id}')" class="px-2.5 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-slate-950 font-bold transition inline-flex items-center space-x-1" title="Chỉnh sửa sản phẩm">
+                        <i class="fa-solid fa-pen-to-square text-xs"></i>
+                        <span>Sửa</span>
                       </button>
                       <button onclick="AdminPage.deleteProduct('${p._id}', '${UI.escapeHTML(p.name)}')" class="p-1.5 rounded-lg bg-slate-800 hover:bg-rose-600 text-slate-400 hover:text-white transition" title="Xóa sản phẩm">
                         <i class="fa-solid fa-trash-can"></i>
@@ -602,39 +619,230 @@ const AdminPage = {
       .catch(err => UI.toast('error', err.message));
   },
 
-  // MODAL THÊM / SỬA SẢN PHẨM
+  // MODAL THÊM / SỬA SẢN PHẨM HOÀN CHỈNH
   openProductModal: (prodId = null) => {
-    const name = prompt('Nhập tên sản phẩm:');
-    if (!name) return;
-    const price = prompt('Nhập giá bán (VND):', '1500000');
-    if (!price) return;
-    const pieceCount = prompt('Số mảnh ghép:', '850');
-    const category = prompt('Danh mục (Technic & Cơ khí / Kiến trúc & Di sản / Phương tiện siêu xe / Vũ trụ & Viễn tưởng):', 'Technic & Cơ khí');
-    const stock = prompt('Số lượng tồn kho ban đầu:', '20');
+    // Tìm thông tin sản phẩm nếu đang sửa
+    const prod = prodId ? AdminPage.cachedProducts.find(p => p._id === prodId) : null;
+    const isEdit = !!prod;
 
-    const data = {
-      name,
-      price: Number(price),
-      pieceCount: Number(pieceCount) || 0,
-      category: category || 'Technic & Cơ khí',
-      stock: Number(stock) || 10,
-      description: `Mô hình ${name} tinh xảo, phụ kiện đầy đủ và hỗ trợ xem 3D đa chiều.`
-    };
+    // Xóa modal cũ nếu có
+    const oldModal = document.getElementById('admin-product-modal');
+    if (oldModal) oldModal.remove();
 
-    if (prodId) {
-      API.admin.updateProduct(prodId, data)
-        .then(() => {
-          UI.toast('success', 'Đã cập nhật sản phẩm');
-          AdminPage.renderProducts(document.getElementById('admin-subpage-container'));
-        })
-        .catch(err => UI.toast('error', err.message));
-    } else {
-      API.admin.createProduct(data)
-        .then(() => {
-          UI.toast('success', 'Đã tạo sản phẩm mới thành công');
-          AdminPage.renderProducts(document.getElementById('admin-subpage-container'));
-        })
-        .catch(err => UI.toast('error', err.message));
+    const categories = [
+      'Technic & Cơ khí',
+      'Kiến trúc & Di sản',
+      'Phương tiện siêu xe',
+      'Vũ trụ & Viễn tưởng',
+      'Robot & Mecha',
+      'Bộ lắp ráp Mini'
+    ];
+
+    const currentImg = (prod && prod.images && prod.images[0]) || '';
+
+    const modalHtml = `
+      <div id="admin-product-modal" class="fixed inset-0 z-[9990] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto">
+        <div class="glass-panel w-full max-w-2xl p-6 sm:p-8 rounded-3xl relative border border-amber-500/30 shadow-2xl my-8 animate-celestial">
+          
+          <!-- Nút đóng -->
+          <button type="button" onclick="document.getElementById('admin-product-modal').remove()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-100 transition p-1">
+            <i class="fa-solid fa-xmark text-xl"></i>
+          </button>
+
+          <!-- Tiêu đề Modal -->
+          <div class="border-b border-slate-800 pb-4 mb-6">
+            <span class="text-xs font-bold text-amber-400 uppercase tracking-widest block mb-1">
+              ${isEdit ? 'CẬP NHẬT THÔNG TIN MÔ HÌNH' : 'KHỞI TẠO MÔ HÌNH MỚI'}
+            </span>
+            <h2 class="text-xl font-extrabold font-heading text-slate-100">
+              ${isEdit ? `Chỉnh Sửa: ${UI.escapeHTML(prod.name)}` : 'Thêm Mới Mô Hình Lắp Ráp'}
+            </h2>
+          </div>
+
+          <!-- Form chỉnh sửa sản phẩm -->
+          <form id="admin-product-form" class="space-y-4 text-xs">
+            
+            <!-- Tên sản phẩm -->
+            <div>
+              <label class="block font-semibold text-slate-200 mb-1">Tên sản phẩm *</label>
+              <input type="text" id="adm-p-name" required value="${UI.escapeHTML((prod && prod.name) || '')}" class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-slate-100 text-xs focus:outline-none focus:border-amber-400 transition" placeholder="Ví dụ: Siêu xe F1 Technic Vô Địch 2026">
+            </div>
+
+            <!-- Danh mục & Trạng thái kinh doanh -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block font-semibold text-slate-200 mb-1">Danh mục *</label>
+                <select id="adm-p-category" required class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-amber-400 transition">
+                  ${categories.map(c => `
+                    <option value="${UI.escapeHTML(c)}" ${(prod && prod.category === c) ? 'selected' : ''}>${UI.escapeHTML(c)}</option>
+                  `).join('')}
+                </select>
+              </div>
+
+              <div>
+                <label class="block font-semibold text-slate-200 mb-1">Trạng thái kinh doanh</label>
+                <select id="adm-p-active" class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-amber-400 transition">
+                  <option value="true" ${(!prod || prod.isActive !== false) ? 'selected' : ''}>Đang mở bán (Hiển thị)</option>
+                  <option value="false" ${(prod && prod.isActive === false) ? 'selected' : ''}>Tạm ẩn khỏi cửa hàng</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Giá niêm yết & Giá khuyến mãi -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block font-semibold text-slate-200 mb-1">Giá bán niêm yết (VND) *</label>
+                <input type="number" id="adm-p-price" required min="0" step="1000" value="${(prod && prod.price) || 1000000}" class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-slate-100 font-mono text-xs focus:outline-none focus:border-amber-400 transition">
+              </div>
+
+              <div>
+                <label class="block font-semibold text-slate-200 mb-1">Giá khuyến mãi (để trống nếu không giảm)</label>
+                <input type="number" id="adm-p-saleprice" min="0" step="1000" value="${(prod && prod.salePrice) || ''}" class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-slate-100 font-mono text-xs focus:outline-none focus:border-amber-400 transition" placeholder="Ví dụ: 890000">
+              </div>
+            </div>
+
+            <!-- Tồn kho, Số mảnh ghép, Độ tuổi -->
+            <div class="grid grid-cols-3 gap-4">
+              <div>
+                <label class="block font-semibold text-slate-200 mb-1">Số lượng tồn kho *</label>
+                <input type="number" id="adm-p-stock" required min="0" value="${(prod && prod.stock !== undefined) ? prod.stock : 20}" class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-slate-100 font-mono text-xs focus:outline-none focus:border-amber-400 transition">
+              </div>
+
+              <div>
+                <label class="block font-semibold text-slate-200 mb-1">Số mảnh ghép</label>
+                <input type="number" id="adm-p-pieces" min="0" value="${(prod && prod.pieceCount) || 500}" class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-slate-100 font-mono text-xs focus:outline-none focus:border-amber-400 transition">
+              </div>
+
+              <div>
+                <label class="block font-semibold text-slate-200 mb-1">Độ tuổi</label>
+                <input type="text" id="adm-p-age" value="${UI.escapeHTML((prod && prod.ageRange) || '8+')}" class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-slate-100 text-xs focus:outline-none focus:border-amber-400 transition" placeholder="8+, 14+, 18+">
+              </div>
+            </div>
+
+            <!-- Mã SKU & Mã QR -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block font-semibold text-slate-200 mb-1">Mã SKU</label>
+                <input type="text" id="adm-p-sku" value="${UI.escapeHTML((prod && prod.sku) || '')}" class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-slate-100 font-mono text-xs focus:outline-none focus:border-amber-400 transition" placeholder="Ví dụ: TECH-F1-1639">
+              </div>
+
+              <div>
+                <label class="block font-semibold text-slate-200 mb-1">Mã QR (tra cứu O2O tại showroom)</label>
+                <input type="text" id="adm-p-qr" value="${UI.escapeHTML((prod && prod.qrCode) || '')}" class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-slate-100 font-mono text-xs focus:outline-none focus:border-amber-400 transition" placeholder="Ví dụ: TOYBRICK-F1-2026">
+              </div>
+            </div>
+
+            <!-- Link hình ảnh -->
+            <div>
+              <label class="block font-semibold text-slate-200 mb-1">URL Hình ảnh đại diện</label>
+              <input type="url" id="adm-p-image" value="${UI.escapeHTML(currentImg)}" class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-slate-100 text-xs focus:outline-none focus:border-amber-400 transition" placeholder="https://images.unsplash.com/...">
+            </div>
+
+            <!-- Mô tả chi tiết -->
+            <div>
+              <label class="block font-semibold text-slate-200 mb-1">Mô tả sản phẩm</label>
+              <textarea id="adm-p-desc" rows="3" class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-slate-100 text-xs focus:outline-none focus:border-amber-400 transition resize-none" placeholder="Nhập câu chuyện và mô tả chi tiết mô hình...">${UI.escapeHTML((prod && prod.description) || '')}</textarea>
+            </div>
+
+            <!-- Nút hành động -->
+            <div class="pt-4 border-t border-slate-800 flex items-center justify-end space-x-3">
+              <button type="button" onclick="document.getElementById('admin-product-modal').remove()" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-semibold transition">
+                Hủy bỏ
+              </button>
+              <button type="submit" id="adm-p-submit-btn" class="px-6 py-2.5 rounded-xl btn-gold text-slate-950 font-bold transition flex items-center space-x-2 shadow-lg">
+                <i class="fa-solid fa-floppy-disk text-xs"></i>
+                <span>${isEdit ? 'Lưu Cập Nhật' : 'Tạo Sản Phẩm Mới'}</span>
+              </button>
+            </div>
+
+          </form>
+
+        </div>
+      </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+    // Gắn sự kiện submit form
+    const form = document.getElementById('admin-product-form');
+    const submitBtn = document.getElementById('adm-p-submit-btn');
+
+    if (form) {
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const name = document.getElementById('adm-p-name').value.trim();
+        const category = document.getElementById('adm-p-category').value;
+        const isActive = document.getElementById('adm-p-active').value === 'true';
+        const price = Number(document.getElementById('adm-p-price').value);
+        const salePriceRaw = document.getElementById('adm-p-saleprice').value.trim();
+        const salePrice = salePriceRaw ? Number(salePriceRaw) : null;
+        const stock = Number(document.getElementById('adm-p-stock').value);
+        const pieceCount = Number(document.getElementById('adm-p-pieces').value) || 0;
+        const ageRange = document.getElementById('adm-p-age').value.trim() || '8+';
+        const sku = document.getElementById('adm-p-sku').value.trim();
+        const qrCode = document.getElementById('adm-p-qr').value.trim();
+        const image = document.getElementById('adm-p-image').value.trim();
+        const description = document.getElementById('adm-p-desc').value.trim();
+
+        if (!name || isNaN(price)) {
+          UI.toast('warning', 'Vui lòng điền đầy đủ tên và giá sản phẩm');
+          return;
+        }
+
+        const payload = {
+          name,
+          category,
+          isActive,
+          price,
+          salePrice,
+          stock,
+          pieceCount,
+          ageRange,
+          sku: sku || undefined,
+          qrCode: qrCode || undefined,
+          images: image ? [image] : (prod && prod.images ? prod.images : []),
+          description
+        };
+
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = `
+            <div class="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin mr-1.5"></div>
+            <span>Đang lưu...</span>
+          `;
+        }
+
+        try {
+          if (isEdit) {
+            const res = await API.admin.updateProduct(prodId, payload);
+            if (res.success) {
+              UI.toast('success', `Đã cập nhật sản phẩm "${name}" thành công!`);
+            }
+          } else {
+            const res = await API.admin.createProduct(payload);
+            if (res.success) {
+              UI.toast('success', `Đã thêm mới sản phẩm "${name}" thành công!`);
+            }
+          }
+
+          const modalEl = document.getElementById('admin-product-modal');
+          if (modalEl) modalEl.remove();
+
+          // Tải lại danh sách sản phẩm
+          await AdminPage.renderProducts(document.getElementById('admin-subpage-container'));
+
+        } catch (err) {
+          UI.toast('error', err.message || 'Lỗi khi lưu sản phẩm');
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = `
+              <i class="fa-solid fa-floppy-disk text-xs mr-1.5"></i>
+              <span>${isEdit ? 'Lưu Cập Nhật' : 'Tạo Sản Phẩm Mới'}</span>
+            `;
+          }
+        }
+      });
     }
   },
 

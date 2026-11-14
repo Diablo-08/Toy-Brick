@@ -100,50 +100,91 @@ const UI = (() => {
       const isAdmin = user.role === 'admin';
 
       container.innerHTML = `
-        <div class="relative group">
-          <button id="user-menu-btn" class="flex items-center space-x-2.5 py-1.5 px-3 rounded-xl bg-slate-800/80 border border-amber-500/25 hover:border-amber-400 text-slate-200 transition">
+        <div class="relative" id="user-menu-wrapper">
+          <button id="user-menu-btn" type="button" class="flex items-center space-x-2.5 py-1.5 px-3 rounded-xl bg-slate-800/80 border border-amber-500/25 hover:border-amber-400 text-slate-200 transition focus:outline-none">
             <div class="w-7 h-7 rounded-lg ${isAdmin ? 'bg-gradient-to-tr from-amber-500 to-rose-500' : 'bg-gradient-to-tr from-amber-600 to-yellow-400'} text-slate-950 font-bold flex items-center justify-center text-xs shadow-sm">
               ${escapeHTML(user.name.charAt(0).toUpperCase())}
             </div>
-            <span class="text-xs font-semibold max-w-[100px] truncate hidden sm:inline">${escapeHTML(user.name)}</span>
-            <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 group-hover:rotate-180 transition-transform"></i>
+            <span class="text-xs font-semibold max-w-[110px] truncate hidden sm:inline">${escapeHTML(user.name)}</span>
+            <i id="user-menu-chevron" class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform"></i>
           </button>
 
-          <!-- Dropdown menu -->
-          <div class="absolute right-0 mt-2 w-52 glass-panel rounded-2xl py-2 hidden group-hover:block hover:block z-50 border border-amber-500/25 shadow-2xl">
-            <div class="px-4 py-2 border-b border-slate-700/60 mb-1">
-              <p class="text-xs text-slate-400 font-medium">Đã đăng nhập với tư cách</p>
-              <p class="text-xs font-bold text-amber-300 truncate">${escapeHTML(user.email || user.username)}</p>
-              ${isAdmin ? '<span class="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">QUẢN TRỊ VIÊN</span>' : ''}
-            </div>
+          <!-- Dropdown menu với click-toggle vững chắc và vùng đệm chống trượt chuột -->
+          <div id="user-dropdown-menu" class="hidden absolute right-0 top-full pt-2 w-56 z-50 transition-all duration-200">
+            <div class="glass-panel rounded-2xl py-2 border border-amber-500/30 shadow-2xl backdrop-blur-xl bg-slate-950/95">
+              <div class="px-4 py-2 border-b border-slate-700/60 mb-1">
+                <p class="text-[11px] text-slate-400 font-medium">Đã đăng nhập với tư cách</p>
+                <p class="text-xs font-bold text-amber-300 truncate">${escapeHTML(user.email || user.username)}</p>
+                ${isAdmin ? '<span class="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">QUẢN TRỊ VIÊN</span>' : ''}
+              </div>
 
-            ${isAdmin ? `
-              <a href="#/admin" class="flex items-center px-4 py-2 text-xs font-medium text-amber-300 hover:bg-amber-500/15 transition">
-                <i class="fa-solid fa-gauge-high w-5 text-amber-400"></i>Quản trị Studio
+              ${isAdmin ? `
+                <a href="#/admin" class="user-dropdown-item flex items-center px-4 py-2 text-xs font-medium text-amber-300 hover:bg-amber-500/15 transition">
+                  <i class="fa-solid fa-gauge-high w-5 text-amber-400"></i>Quản trị Studio
+                </a>
+              ` : ''}
+
+              <a href="#/orders" class="user-dropdown-item flex items-center px-4 py-2 text-xs font-medium text-slate-200 hover:bg-white/10 transition">
+                <i class="fa-solid fa-receipt w-5 text-amber-400/80"></i>Đơn hàng của tôi
               </a>
-            ` : ''}
 
-            <a href="#/orders" class="flex items-center px-4 py-2 text-xs font-medium text-slate-200 hover:bg-white/5 transition">
-              <i class="fa-solid fa-receipt w-5 text-amber-400/80"></i>Đơn hàng của tôi
-            </a>
+              <a href="#/account" class="user-dropdown-item flex items-center px-4 py-2 text-xs font-medium text-slate-200 hover:bg-white/10 transition">
+                <i class="fa-solid fa-user-gear w-5 text-amber-400/80"></i>Tài khoản cá nhân
+              </a>
 
-            <a href="#/account" class="flex items-center px-4 py-2 text-xs font-medium text-slate-200 hover:bg-white/5 transition">
-              <i class="fa-solid fa-user-gear w-5 text-amber-400/80"></i>Tài khoản cá nhân
-            </a>
+              <div class="border-t border-slate-700/60 my-1"></div>
 
-            <div class="border-t border-slate-700/60 my-1"></div>
-
-            <button id="logout-btn" class="w-full text-left flex items-center px-4 py-2 text-xs font-medium text-rose-400 hover:bg-rose-500/10 transition">
-              <i class="fa-solid fa-arrow-right-from-bracket w-5 text-rose-400"></i>Đăng xuất
-            </button>
+              <button id="logout-btn" class="w-full text-left flex items-center px-4 py-2 text-xs font-medium text-rose-400 hover:bg-rose-500/15 transition">
+                <i class="fa-solid fa-arrow-right-from-bracket w-5 text-rose-400"></i>Đăng xuất
+              </button>
+            </div>
           </div>
         </div>
       `;
+
+      // Xử lý bật/tắt menu bằng Click
+      const menuBtn = document.getElementById('user-menu-btn');
+      const dropdown = document.getElementById('user-dropdown-menu');
+      const chevron = document.getElementById('user-menu-chevron');
+
+      if (menuBtn && dropdown) {
+        menuBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const isHidden = dropdown.classList.contains('hidden');
+          if (isHidden) {
+            dropdown.classList.remove('hidden');
+            if (chevron) chevron.classList.add('rotate-180');
+          } else {
+            dropdown.classList.add('hidden');
+            if (chevron) chevron.classList.remove('rotate-180');
+          }
+        });
+
+        // Bấm ngoài menu tự động đóng
+        const closeMenuOnOutside = (e) => {
+          const wrapper = document.getElementById('user-menu-wrapper');
+          if (wrapper && !wrapper.contains(e.target)) {
+            dropdown.classList.add('hidden');
+            if (chevron) chevron.classList.remove('rotate-180');
+          }
+        };
+        document.removeEventListener('click', closeMenuOnOutside);
+        document.addEventListener('click', closeMenuOnOutside);
+
+        // Đóng khi click bất kỳ link nào trong dropdown
+        dropdown.querySelectorAll('.user-dropdown-item').forEach(link => {
+          link.addEventListener('click', () => {
+            dropdown.classList.add('hidden');
+            if (chevron) chevron.classList.remove('rotate-180');
+          });
+        });
+      }
 
       // Gắn sự kiện đăng xuất
       const logoutBtn = document.getElementById('logout-btn');
       if (logoutBtn) {
         logoutBtn.addEventListener('click', () => {
+          if (dropdown) dropdown.classList.add('hidden');
           Store.clearAuth();
           UI.toast('info', 'Bạn đã đăng xuất thành công');
           UI.updateNavbarUser();
@@ -155,7 +196,7 @@ const UI = (() => {
       }
     } else {
       container.innerHTML = `
-        <button id="open-auth-btn" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-900 btn-gold transition flex items-center space-x-1.5">
+        <button id="open-auth-btn" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-950 btn-gold transition flex items-center space-x-1.5 shadow-md">
           <i class="fa-solid fa-arrow-right-to-bracket text-xs"></i>
           <span>Đăng nhập</span>
         </button>

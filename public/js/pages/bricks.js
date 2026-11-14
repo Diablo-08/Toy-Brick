@@ -107,21 +107,46 @@ const BricksPage = {
     const inStockCheck = document.getElementById('brick-instock');
     const filterBtn = document.getElementById('brick-filter-btn');
 
+    const triggerFilter = () => {
+      BricksPage.currentParams.q = searchInput ? searchInput.value.trim() : '';
+      BricksPage.currentParams.category = categorySelect ? categorySelect.value : 'all';
+      BricksPage.currentParams.color = colorSelect ? colorSelect.value : 'all';
+      BricksPage.currentParams.inStock = inStockCheck ? inStockCheck.checked : false;
+      BricksPage.currentParams.page = 1;
+      BricksPage.loadBricks();
+    };
+
     if (filterBtn) {
-      filterBtn.addEventListener('click', () => {
-        BricksPage.currentParams.q = searchInput.value.trim();
-        BricksPage.currentParams.category = categorySelect.value;
-        BricksPage.currentParams.color = colorSelect.value;
-        BricksPage.currentParams.inStock = inStockCheck.checked;
-        BricksPage.currentParams.page = 1;
-        BricksPage.loadBricks();
+      filterBtn.addEventListener('click', triggerFilter);
+    }
+
+    // 1. Tự động tìm kiếm khi gõ (debounce 300ms)
+    if (searchInput) {
+      searchInput.addEventListener('input', () => {
+        clearTimeout(BricksPage.searchDebounceTimer);
+        BricksPage.searchDebounceTimer = setTimeout(triggerFilter, 300);
+      });
+      searchInput.addEventListener('keyup', (e) => {
+        if (e.key === 'Enter') {
+          clearTimeout(BricksPage.searchDebounceTimer);
+          triggerFilter();
+        }
       });
     }
 
-    if (searchInput) {
-      searchInput.addEventListener('keyup', (e) => {
-        if (e.key === 'Enter' && filterBtn) filterBtn.click();
-      });
+    // 2. Tự động lọc khi đổi loại gạch
+    if (categorySelect) {
+      categorySelect.addEventListener('change', triggerFilter);
+    }
+
+    // 3. Tự động lọc khi đổi màu sắc
+    if (colorSelect) {
+      colorSelect.addEventListener('change', triggerFilter);
+    }
+
+    // 4. Tự động lọc khi tick checkbox còn hàng
+    if (inStockCheck) {
+      inStockCheck.addEventListener('change', triggerFilter);
     }
   },
 
@@ -334,6 +359,7 @@ const BricksPage = {
       clearInterval(BricksPage.pollingTimer);
       BricksPage.pollingTimer = null;
     }
+    clearTimeout(BricksPage.searchDebounceTimer);
   }
 };
 

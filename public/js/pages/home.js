@@ -212,19 +212,25 @@ const HomePage = {
           const displayPrice = isSale ? p.salePrice : p.price;
 
           html += `
-            <div class="glass-panel glass-panel-hover rounded-2xl overflow-hidden flex flex-col justify-between group border border-amber-500/20">
-              <div class="relative overflow-hidden bg-slate-950 h-52">
-                <img src="${UI.escapeHTML(mainImg)}" alt="${UI.escapeHTML(p.name)}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy">
+            <div class="glass-panel glass-panel-hover rounded-2xl overflow-hidden flex flex-col justify-between group border border-amber-500/20 transition-all duration-300">
+              <a href="#/product/${UI.escapeHTML(p.slug)}" class="block relative overflow-hidden bg-slate-950 h-52 group/img cursor-pointer" title="Xem chi tiết & Mô hình 3D">
+                <img src="${UI.escapeHTML(mainImg)}" alt="${UI.escapeHTML(p.name)}" class="w-full h-full object-cover group-hover/img:scale-108 transition-transform duration-500" loading="lazy">
+                <div class="absolute inset-0 bg-slate-950/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
+                  <span class="px-3.5 py-1.5 rounded-xl bg-amber-500 text-slate-950 font-bold text-xs shadow-lg flex items-center space-x-1.5 transform translate-y-2 group-hover/img:translate-y-0 transition-transform">
+                    <i class="fa-solid fa-cube text-xs"></i>
+                    <span>Xem 3D Chi Tiết</span>
+                  </span>
+                </div>
                 ${isSale ? '<span class="absolute top-3 left-3 px-2.5 py-1 rounded-lg bg-rose-500/90 text-white text-[11px] font-bold shadow-md">GIẢM GIÁ</span>' : ''}
                 <span class="absolute top-3 right-3 px-2 py-0.5 rounded bg-slate-900/80 text-amber-300 text-[10px] font-bold border border-amber-500/30">
                   ${UI.escapeHTML(p.pieceCount)} mảnh
                 </span>
-              </div>
+              </a>
 
               <div class="p-5 flex-1 flex flex-col justify-between">
                 <div>
                   <span class="text-[11px] font-semibold text-amber-400 uppercase tracking-wider block mb-1">${UI.escapeHTML(p.category)}</span>
-                  <a href="#/product/${UI.escapeHTML(p.slug)}" class="font-heading font-bold text-base text-slate-100 hover:text-amber-400 transition line-clamp-1">
+                  <a href="#/product/${UI.escapeHTML(p.slug)}" class="font-heading font-bold text-base text-slate-100 hover:text-amber-400 transition line-clamp-1 block cursor-pointer">
                     ${UI.escapeHTML(p.name)}
                   </a>
                   <p class="text-xs text-slate-400 font-lora line-clamp-2 mt-1 leading-relaxed">
@@ -239,8 +245,9 @@ const HomePage = {
                     </span>
                     ${isSale ? `<span class="text-[11px] text-slate-500 line-through font-sans">${UI.formatCurrency(p.price)}</span>` : ''}
                   </div>
-                  <a href="#/product/${UI.escapeHTML(p.slug)}" class="p-2.5 rounded-xl bg-amber-500/20 hover:bg-amber-500 hover:text-slate-950 text-amber-300 border border-amber-500/30 transition text-xs font-semibold flex items-center space-x-1" title="Xem chi tiết & 3D">
-                    <i class="fa-solid fa-eye"></i>
+                  <a href="#/product/${UI.escapeHTML(p.slug)}" class="px-3.5 py-2 rounded-xl btn-gold text-slate-950 font-bold text-xs transition flex items-center space-x-1.5 shadow-md" title="Xem 3D & Đặt mua">
+                    <i class="fa-solid fa-cube text-xs"></i>
+                    <span>Xem 3D</span>
                   </a>
                 </div>
               </div>
