@@ -65,19 +65,19 @@ const AdminPage = {
 
         <!-- Tab chuyển đổi chức năng -->
         <div class="flex items-center space-x-1.5 p-1 rounded-2xl bg-slate-900/90 border border-slate-700 overflow-x-auto text-xs">
-          <button class="admin-tab-btn px-4 py-2 rounded-xl font-bold transition ${AdminPage.currentTab === 'dashboard' ? 'btn-gold text-slate-950' : 'text-slate-300 hover:text-white'}" onclick="AdminPage.switchTab('dashboard')">
+          <button data-tab="dashboard" class="admin-tab-btn px-4 py-2 rounded-xl font-bold transition ${AdminPage.currentTab === 'dashboard' ? 'btn-gold text-slate-950' : 'text-slate-300 hover:text-white'}" onclick="AdminPage.switchTab('dashboard')">
             <i class="fa-solid fa-chart-line mr-1"></i>Thống kê
           </button>
-          <button class="admin-tab-btn px-4 py-2 rounded-xl font-bold transition ${AdminPage.currentTab === 'products' ? 'btn-gold text-slate-950' : 'text-slate-300 hover:text-white'}" onclick="AdminPage.switchTab('products')">
+          <button data-tab="products" class="admin-tab-btn px-4 py-2 rounded-xl font-bold transition ${AdminPage.currentTab === 'products' ? 'btn-gold text-slate-950' : 'text-slate-300 hover:text-white'}" onclick="AdminPage.switchTab('products')">
             <i class="fa-solid fa-box-open mr-1"></i>Sản phẩm
           </button>
-          <button class="admin-tab-btn px-4 py-2 rounded-xl font-bold transition ${AdminPage.currentTab === 'bricks' ? 'btn-gold text-slate-950' : 'text-slate-300 hover:text-white'}" onclick="AdminPage.switchTab('bricks')">
+          <button data-tab="bricks" class="admin-tab-btn px-4 py-2 rounded-xl font-bold transition ${AdminPage.currentTab === 'bricks' ? 'btn-gold text-slate-950' : 'text-slate-300 hover:text-white'}" onclick="AdminPage.switchTab('bricks')">
             <i class="fa-solid fa-puzzle-piece mr-1"></i>Kho Gạch Lẻ
           </button>
-          <button class="admin-tab-btn px-4 py-2 rounded-xl font-bold transition ${AdminPage.currentTab === 'orders' ? 'btn-gold text-slate-950' : 'text-slate-300 hover:text-white'}" onclick="AdminPage.switchTab('orders')">
+          <button data-tab="orders" class="admin-tab-btn px-4 py-2 rounded-xl font-bold transition ${AdminPage.currentTab === 'orders' ? 'btn-gold text-slate-950' : 'text-slate-300 hover:text-white'}" onclick="AdminPage.switchTab('orders')">
             <i class="fa-solid fa-receipt mr-1"></i>Đơn hàng
           </button>
-          <button class="admin-tab-btn px-4 py-2 rounded-xl font-bold transition ${AdminPage.currentTab === 'users' ? 'btn-gold text-slate-950' : 'text-slate-300 hover:text-white'}" onclick="AdminPage.switchTab('users')">
+          <button data-tab="users" class="admin-tab-btn px-4 py-2 rounded-xl font-bold transition ${AdminPage.currentTab === 'users' ? 'btn-gold text-slate-950' : 'text-slate-300 hover:text-white'}" onclick="AdminPage.switchTab('users')">
             <i class="fa-solid fa-users mr-1"></i>Khách hàng
           </button>
         </div>
@@ -90,6 +90,18 @@ const AdminPage = {
       </div>
     `;
 
+    // Gắn trực tiếp addEventListener cho tất cả các nút tab
+    const tabBtns = container.querySelectorAll('.admin-tab-btn');
+    tabBtns.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const tab = btn.getAttribute('data-tab');
+        if (tab) {
+          AdminPage.switchTab(tab);
+        }
+      });
+    });
+
     await AdminPage.loadSubpage();
   },
 
@@ -97,17 +109,9 @@ const AdminPage = {
     AdminPage.currentTab = tab;
     const btns = document.querySelectorAll('.admin-tab-btn');
     btns.forEach(btn => {
-      btn.className = 'admin-tab-btn px-4 py-2 rounded-xl font-bold transition text-slate-300 hover:text-white';
+      const isMatch = btn.getAttribute('data-tab') === tab;
+      btn.className = `admin-tab-btn px-4 py-2 rounded-xl font-bold transition ${isMatch ? 'btn-gold text-slate-950' : 'text-slate-300 hover:text-white'}`;
     });
-    const clicked = Array.from(btns).find(b => b.textContent.includes(
-      tab === 'dashboard' ? 'Thống kê' :
-      tab === 'products' ? 'Sản phẩm' :
-      tab === 'bricks' ? 'Kho Gạch' :
-      tab === 'orders' ? 'Đơn hàng' : 'Khách hàng'
-    ));
-    if (clicked) {
-      clicked.className = 'admin-tab-btn px-4 py-2 rounded-xl font-bold transition btn-gold text-slate-950';
-    }
 
     await AdminPage.loadSubpage();
   },

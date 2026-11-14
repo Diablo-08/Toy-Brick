@@ -2,12 +2,14 @@
  * Kho Gạch Lẻ Pick-a-Brick
  * Lưới thẻ, lọc theo màu, loại gạch, tìm theo mã/tên,
  * hiển thị tồn kho hiện tại, chọn số lượng, tự động polling refresh mỗi 30s.
+ * Thiết kế chuẩn Event Delegation: KHÔNG dùng inline onclick, an toàn tuyệt đối với CSP.
  */
 const BricksPage = {
   pollingTimer: null,
   searchDebounceTimer: null,
   cachedColors: [],
   cachedCategories: [],
+  cachedBricksMap: {},
 
   currentParams: {
     page: 1,
@@ -71,12 +73,12 @@ const BricksPage = {
             </label>
 
             <div class="flex items-center space-x-2">
-              <button id="brick-reset-btn" onclick="BricksPage.resetFilters()" class="py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 hover:border-slate-600 text-xs font-semibold transition flex items-center space-x-1" title="Đặt lại bộ lọc">
+              <button id="brick-reset-btn" type="button" class="py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 hover:border-slate-600 text-xs font-semibold transition flex items-center space-x-1" title="Đặt lại bộ lọc">
                 <i class="fa-solid fa-rotate-right text-[11px]"></i>
                 <span>Đặt lại</span>
               </button>
 
-              <button id="brick-filter-btn" class="py-2 px-3.5 rounded-xl btn-gold text-slate-950 font-bold text-xs transition flex items-center space-x-1 shadow-md">
+              <button id="brick-filter-btn" type="button" class="py-2 px-3.5 rounded-xl btn-gold text-slate-950 font-bold text-xs transition flex items-center space-x-1 shadow-md">
                 <i class="fa-solid fa-filter text-[11px]"></i>
                 <span>Lọc</span>
               </button>
@@ -122,14 +124,10 @@ const BricksPage = {
     const colorSelect = document.getElementById('brick-color');
     const inStockCheck = document.getElementById('brick-instock');
     const filterBtn = document.getElementById('brick-filter-btn');
-
-    // Đồng bộ giá trị từ currentParams
-    if (categorySelect && BricksPage.currentParams.category) {
-      categorySelect.value = BricksPage.currentParams.category;
-    }
-    if (colorSelect && BricksPage.currentParams.color) {
-      colorSelect.value = BricksPage.currentParams.color;
-    }
+    const resetBtn = document.getElementById('brick-reset-btn');
+    const swatchesContainer = document.getElementById('color-swatches-container');
+    const gridContainer = document.getElementById('bricks-grid-container');
+    const pagContainer = document.getElementById('bricks-pagination');
 
     const triggerFilter = () => {
       BricksPage.currentParams.q = searchInput ? searchInput.value.trim() : '';
@@ -141,7 +139,17 @@ const BricksPage = {
     };
 
     if (filterBtn) {
-      filterBtn.addEventListener('click', triggerFilter);
+      filterBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        triggerFilter();
+      });
+    }
+
+    if (resetBtn) {
+      resetBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        BricksPage.resetFilters();
+      });
     }
 
     // 1. Tự động tìm kiếm khi gõ (debounce 300ms)
@@ -171,6 +179,73 @@ const BricksPage = {
     // 4. Tự động lọc khi tick checkbox còn hàng
     if (inStockCheck) {
       inStockCheck.addEventListener('change', triggerFilter);
+    }
+
+    // 5. EVENT DELEGATION cho bảng màu nhanh (KHÔNG inline onclick)
+    if (swatchesContainer) {
+      swatchesContainer.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-color]');
+        if (btn) {
+          e.preventDefault();
+          const colorName = btn.getAttribute('data-color');
+          BricksPage.filterByColor(colorName);
+        }
+      });
+    }
+
+    // 6. EVENT DELEGATION cho thẻ gạch lẻ trong lưới
+    if (gridContainer) {
+      gridContainer.addEventListener('click', (e) => {
+        // Nút thêm giỏ
+        const addCartBtn = e.target.closest('[data-action="add-cart"]');
+        if (addCartBtn) {
+          e.preventDefault();
+          const brickId = addCartBtn.getAttribute('data-id');
+          const b = BricksPage.cachedBricksMap[brickId];
+          if (b) {
+            const qtyInput = document.getElementById(`brick-qty-${brickId}`);
+            const qty = parseInt(qtyInput ? qtyInput.value : 1, 10) || 1;
+            BricksPage.addToCart(brickId, b.name, b.price, b.code, b.color, b.colorHex, b.stock, qty);
+          }
+          return;
+        }
+
+        // Click màu trên thẻ
+        const colorBtn = e.target.closest('[data-color]');
+        if (colorBtn) {
+          e.preventDefault();
+          BricksPage.filterByColor(colorBtn.getAttribute('data-color'));
+          return;
+        }
+
+        // Click loại gạch trên thẻ
+        const catBtn = e.target.closest('[data-category]');
+        if (catBtn) {
+          e.preventDefault();
+          BricksPage.filterByCategory(catBtn.getAttribute('data-category'));
+          return;
+        }
+
+        // Nút reset khi rỗng
+        const emptyResetBtn = e.target.closest('[data-action="reset-filter"]');
+        if (emptyResetBtn) {
+          e.preventDefault();
+          BricksPage.resetFilters();
+          return;
+        }
+      });
+    }
+
+    // 7. EVENT DELEGATION cho phân trang
+    if (pagContainer) {
+      pagContainer.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-page]');
+        if (btn) {
+          e.preventDefault();
+          const page = parseInt(btn.getAttribute('data-page'), 10);
+          if (page) BricksPage.changePage(page);
+        }
+      });
     }
   },
 
@@ -219,6 +294,12 @@ const BricksPage = {
       }
 
       const { bricks = [], filters = {}, pagination = {} } = res.data;
+
+      // Lưu map id -> brick để event delegation đọc
+      BricksPage.cachedBricksMap = {};
+      bricks.forEach(b => {
+        BricksPage.cachedBricksMap[b._id] = b;
+      });
 
       // Lưu cache colors & categories
       if (filters.colors && filters.colors.length > 0) {
@@ -273,7 +354,7 @@ const BricksPage = {
             <p class="text-xs text-slate-400 mb-6">
               Không có mã gạch nào khớp với bộ lọc hiện tại. Hãy thử tìm từ khóa khác hoặc xóa bộ lọc để xem toàn bộ kho.
             </p>
-            <button onclick="BricksPage.resetFilters()" class="px-5 py-2.5 rounded-xl btn-gold text-slate-950 font-bold text-xs transition inline-flex items-center space-x-2">
+            <button type="button" data-action="reset-filter" class="px-5 py-2.5 rounded-xl btn-gold text-slate-950 font-bold text-xs transition inline-flex items-center space-x-2">
               <i class="fa-solid fa-rotate-right"></i>
               <span>Xem Tất Cả Chi Tiết Gạch</span>
             </button>
@@ -295,7 +376,7 @@ const BricksPage = {
                 <span class="px-2.5 py-1 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-300 font-mono text-xs font-bold">
                   ${UI.escapeHTML(b.code)}
                 </span>
-                <button onclick="BricksPage.filterByColor('${UI.escapeHTML(b.color)}')" class="flex items-center space-x-1.5 text-xs text-slate-300 hover:text-amber-400 transition" title="Lọc theo màu ${UI.escapeHTML(b.color)}">
+                <button type="button" data-color="${UI.escapeHTML(b.color)}" class="flex items-center space-x-1.5 text-xs text-slate-300 hover:text-amber-400 transition" title="Lọc theo màu ${UI.escapeHTML(b.color)}">
                   <span class="w-3.5 h-3.5 rounded-full border border-white/20 shadow-sm" style="background-color: ${UI.escapeHTML(b.colorHex)}"></span>
                   <span class="text-[11px] truncate max-w-[100px]">${UI.escapeHTML(b.color)}</span>
                 </button>
@@ -305,7 +386,7 @@ const BricksPage = {
               <h3 class="font-heading font-bold text-sm text-slate-100 group-hover:text-amber-400 transition line-clamp-2 leading-snug">
                 ${UI.escapeHTML(b.name)}
               </h3>
-              <button onclick="BricksPage.filterByCategory('${UI.escapeHTML(b.category)}')" class="text-[10px] text-slate-400 hover:text-amber-400 block mt-1 transition text-left" title="Lọc theo loại ${UI.escapeHTML(b.category)}">
+              <button type="button" data-category="${UI.escapeHTML(b.category)}" class="text-[10px] text-slate-400 hover:text-amber-400 block mt-1 transition text-left" title="Lọc theo loại ${UI.escapeHTML(b.category)}">
                 <i class="fa-solid fa-tag text-[9px] mr-1"></i>${UI.escapeHTML(b.category)}
               </button>
             </div>
@@ -324,7 +405,7 @@ const BricksPage = {
               <!-- Thêm vào giỏ -->
               <div class="flex items-center space-x-2">
                 <input type="number" id="brick-qty-${b._id}" min="1" max="${b.stock || 1}" value="1" class="w-16 px-2 py-2 bg-slate-900 border border-slate-700 rounded-xl text-center text-xs font-bold text-slate-100 focus:outline-none focus:border-amber-400 font-mono" ${isOutOfStock ? 'disabled' : ''}>
-                <button onclick="BricksPage.addToCart('${b._id}', '${UI.escapeHTML(b.name)}', ${b.price}, '${UI.escapeHTML(b.code)}', '${UI.escapeHTML(b.color)}', '${UI.escapeHTML(b.colorHex)}', ${b.stock})" class="flex-1 py-2 px-3 rounded-xl btn-gold text-slate-950 font-bold text-xs transition flex items-center justify-center space-x-1.5 ${isOutOfStock ? 'opacity-40 cursor-not-allowed' : ''}" ${isOutOfStock ? 'disabled' : ''}>
+                <button type="button" data-action="add-cart" data-id="${b._id}" class="flex-1 py-2 px-3 rounded-xl btn-gold text-slate-950 font-bold text-xs transition flex items-center justify-center space-x-1.5 ${isOutOfStock ? 'opacity-40 cursor-not-allowed' : ''}" ${isOutOfStock ? 'disabled' : ''}>
                   <i class="fa-solid fa-cart-plus text-xs"></i>
                   <span>Thêm giỏ</span>
                 </button>
@@ -355,7 +436,7 @@ const BricksPage = {
 
     let swatchHtml = '<span class="text-slate-400 mr-1 text-[11px]">Bảng màu nhanh:</span>';
     swatchHtml += `
-      <button class="px-2 py-0.5 rounded text-[10px] font-semibold transition ${isAll ? 'bg-amber-400 text-slate-950 font-bold shadow-sm' : 'bg-slate-800 text-slate-300 hover:text-white border border-slate-700'}" onclick="BricksPage.filterByColor('all')">
+      <button type="button" data-color="all" class="px-2 py-0.5 rounded text-[10px] font-semibold transition ${isAll ? 'bg-amber-400 text-slate-950 font-bold shadow-sm' : 'bg-slate-800 text-slate-300 hover:text-white border border-slate-700'}">
         Tất cả
       </button>
     `;
@@ -364,7 +445,7 @@ const BricksPage = {
     colors.slice(0, 10).forEach(c => {
       const isSelected = currentColor === c.name;
       swatchHtml += `
-        <button class="inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[10px] transition ${isSelected ? 'bg-amber-500/25 border border-amber-400 text-amber-300 font-bold' : 'bg-slate-900 border border-slate-700 hover:border-amber-400/50 text-slate-300'}" onclick="BricksPage.filterByColor('${UI.escapeHTML(c.name)}')">
+        <button type="button" data-color="${UI.escapeHTML(c.name)}" class="inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[10px] transition ${isSelected ? 'bg-amber-500/25 border border-amber-400 text-amber-300 font-bold' : 'bg-slate-900 border border-slate-700 hover:border-amber-400/50 text-slate-300'}">
           <span class="w-2.5 h-2.5 rounded-full border border-white/20" style="background-color: ${UI.escapeHTML(c.hex)}"></span>
           <span>${UI.escapeHTML(c.name)}</span>
         </button>
@@ -404,7 +485,7 @@ const BricksPage = {
 
     if (currentPage > 1) {
       html += `
-        <button class="px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs font-semibold text-slate-300 hover:border-amber-400 transition" onclick="BricksPage.changePage(${currentPage - 1})">
+        <button type="button" data-page="${currentPage - 1}" class="px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs font-semibold text-slate-300 hover:border-amber-400 transition">
           <i class="fa-solid fa-chevron-left"></i>
         </button>
       `;
@@ -413,7 +494,7 @@ const BricksPage = {
     for (let i = 1; i <= Math.min(totalPages, 7); i++) {
       const isActive = i === currentPage;
       html += `
-        <button class="px-3.5 py-2 rounded-xl text-xs font-bold transition ${isActive ? 'btn-gold text-slate-950' : 'bg-slate-900 border border-slate-700 text-slate-300 hover:border-amber-400'}" onclick="BricksPage.changePage(${i})">
+        <button type="button" data-page="${i}" class="px-3.5 py-2 rounded-xl text-xs font-bold transition ${isActive ? 'btn-gold text-slate-950' : 'bg-slate-900 border border-slate-700 text-slate-300 hover:border-amber-400'}">
           ${i}
         </button>
       `;
@@ -421,7 +502,7 @@ const BricksPage = {
 
     if (currentPage < totalPages) {
       html += `
-        <button class="px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs font-semibold text-slate-300 hover:border-amber-400 transition" onclick="BricksPage.changePage(${currentPage + 1})">
+        <button type="button" data-page="${currentPage + 1}" class="px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs font-semibold text-slate-300 hover:border-amber-400 transition">
           <i class="fa-solid fa-chevron-right"></i>
         </button>
       `;
@@ -436,10 +517,7 @@ const BricksPage = {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   },
 
-  addToCart: async (brickId, name, price, code, color, colorHex, currentStock) => {
-    const qtyInput = document.getElementById(`brick-qty-${brickId}`);
-    const qty = parseInt(qtyInput ? qtyInput.value : 1, 10) || 1;
-
+  addToCart: async (brickId, name, price, code, color, colorHex, currentStock, qty = 1) => {
     if (qty > currentStock) {
       UI.toast('warning', `Chỉ còn ${currentStock} viên gạch ${name} trong kho`);
       return;
