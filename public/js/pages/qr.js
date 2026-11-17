@@ -15,7 +15,7 @@ const QRPage = {
     if (!detectorSection) {
       detectorSection = document.createElement('section');
       detectorSection.id = 'box-detector-page';
-      detectorSection.className = 'flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6';
+      detectorSection.className = 'flex-1 w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-4 sm:py-6';
       if (pageContent && pageContent.parentNode) {
         pageContent.parentNode.insertBefore(detectorSection, pageContent.nextSibling);
       } else {

@@ -199,7 +199,7 @@ const HomePage = {
 
           <!-- Cột Khung Viewer 3D tương tác (Chiều cao linh hoạt từ mobile đến desktop) -->
           <div class="lg:col-span-6 xl:col-span-6 relative w-full">
-            <div class="relative w-full h-[280px] sm:h-[360px] md:h-[400px] lg:h-[430px] xl:h-[470px] rounded-2xl bg-gradient-to-b from-slate-900/90 to-slate-950/95 border border-amber-500/20 overflow-hidden shadow-inner flex flex-col justify-between">
+            <div class="relative w-full h-[280px] sm:h-[360px] md:h-[400px] lg:h-[430px] xl:h-[470px] 2xl:h-[500px] rounded-2xl bg-gradient-to-b from-slate-900/90 to-slate-950/95 border border-amber-500/20 overflow-hidden shadow-inner flex flex-col justify-between">
 
               <!-- Badge trạng thái 3D -->
               <div class="p-3 sm:p-4 flex items-center justify-between z-10 pointer-events-none">
