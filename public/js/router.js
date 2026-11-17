@@ -11,7 +11,7 @@ const Router = (() => {
     { pattern: /^#\/shop\/?$/, page: ShopPage },
     { pattern: /^#\/product\/([a-zA-Z0-9_-]+)\/?$/, page: ProductPage, paramNames: ['slug'] },
     { pattern: /^#\/bricks\/?$/, page: BricksPage },
-    { pattern: /^#\/qr\/?$/, page: QRPage },
+    { pattern: /^#\/(?:qr|detector)\/?$/, page: DetectorPage },
     { pattern: /^#\/cart\/?$/, page: CartPage },
     { pattern: /^#\/checkout\/?$/, page: CheckoutPage },
     { pattern: /^#\/orders\/?$/, page: OrdersPage },
@@ -36,7 +36,7 @@ const Router = (() => {
 
     // Đảm bảo trạng thái hiển thị: ẩn detectorPage khi ở trang khác
     const detectorPage = document.getElementById('box-detector-page');
-    if (!hash.startsWith('#/qr')) {
+    if (!hash.startsWith('#/qr') && !hash.startsWith('#/detector')) {
       if (detectorPage) detectorPage.classList.add('hidden');
       container.classList.remove('hidden');
     }
