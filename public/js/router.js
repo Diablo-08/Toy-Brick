@@ -34,6 +34,13 @@ const Router = (() => {
       }
     }
 
+    // Đảm bảo trạng thái hiển thị: ẩn detectorPage khi ở trang khác
+    const detectorPage = document.getElementById('box-detector-page');
+    if (!hash.startsWith('#/qr')) {
+      if (detectorPage) detectorPage.classList.add('hidden');
+      container.classList.remove('hidden');
+    }
+
     // 2. Cập nhật active link trên Navbar
     updateActiveNav(hash);
 

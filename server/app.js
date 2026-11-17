@@ -44,6 +44,11 @@ app.use(
         imgSrc: ["'self'", 'data:', 'https:', 'blob:'],
         connectSrc: ["'self'", 'https:', 'wss:'],
         mediaSrc: ["'self'"],
+        frameSrc: [
+          "'self'",
+          'https://toy-box-searcher.streamlit.app',
+          'https://*.streamlit.app'
+        ],
         objectSrc: ["'none'"]
       }
     },

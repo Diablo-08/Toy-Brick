@@ -255,31 +255,33 @@ const HomePage = {
         </div>
       </section>
 
-      <!-- KHỐI TRẢI NGHIỆM O2O QUÉT QR TẠI CỬA HÀNG -->
-      <section class="mb-16 glass-panel rounded-3xl p-6 sm:p-10 border border-sky-500/25 relative overflow-hidden">
+      <!-- KHỐI CÔNG CỤ NHẬN DIỆN HỘP ĐỒ CHƠI TRỰC TUYẾN AI -->
+      <section class="mb-16 glass-panel rounded-3xl p-6 sm:p-10 border border-amber-500/25 relative overflow-hidden bg-gradient-to-r from-slate-900 via-amber-950/20 to-slate-900">
         <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
           <div class="md:col-span-8 space-y-4">
-            <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-500/30 text-sky-400 text-xs font-semibold">
-              <i class="fa-solid fa-qrcode"></i>
-              <span>TRẢI NGHIỆM O2O TẠI SHOWROOM</span>
+            <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-semibold">
+              <i class="fa-solid fa-cube"></i>
+              <span>CÔNG CỤ AI THÔNG MINH</span>
             </div>
             <h2 class="text-2xl sm:text-3xl font-extrabold font-heading text-slate-100">
-              Quét QR Tại Quầy — Chiêm Ngưỡng 3D Liền Tay
+              Nhận Diện Hộp Đồ Chơi — Tra Cứu Liền Tay
             </h2>
             <p class="text-sm text-slate-300 font-lora leading-relaxed max-w-2xl">
-              Đang đứng trước kệ hàng của ToyBrick Studio? Hãy dùng camera quét mã QR dán trên vỏ hộp sản phẩm để xem trước mô hình 3D, kiểm tra từng mảnh ghép và xem cấu trúc bung tách trước khi quyết định rước về nhà!
+              Đang có trong tay vỏ hộp hoặc hình ảnh mô hình? Hãy dùng công cụ AI nhận diện trực tuyến để xác định chính xác tên bộ mô hình, chi tiết mảnh ghép và thông số lắp ráp ngay tức thì!
             </p>
             <div class="pt-2">
-              <a href="#/qr" class="inline-flex items-center space-x-2 px-5 py-3 rounded-xl bg-gradient-to-r from-sky-500 to-cyan-500 text-slate-950 font-bold text-sm shadow-lg shadow-sky-500/20 hover:from-sky-400 hover:to-cyan-400 transition">
-                <i class="fa-solid fa-camera"></i>
-                <span>Mở máy quét QR / Tra cứu mã</span>
+              <a href="#/qr" class="inline-flex items-center space-x-2 px-5 py-3 rounded-xl btn-gold text-slate-950 font-bold text-sm shadow-lg shadow-amber-500/20 transition">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                <span>Mở công cụ nhận diện hộp</span>
               </a>
             </div>
           </div>
           <div class="md:col-span-4 flex justify-center">
-            <div class="w-44 h-44 rounded-2xl bg-white p-3 shadow-2xl flex flex-col items-center justify-center border-4 border-amber-400">
-              <i class="fa-solid fa-qrcode text-8xl text-slate-900"></i>
-              <span class="text-[10px] text-slate-600 font-bold mt-1 tracking-wider uppercase">TOYBRICK SCANNER</span>
+            <div class="w-44 h-44 rounded-2xl bg-slate-900/90 border-2 border-amber-400/60 p-4 shadow-2xl flex flex-col items-center justify-center space-y-2 text-center group">
+              <div class="w-20 h-20 rounded-2xl bg-amber-500/20 flex items-center justify-center border border-amber-500/40 shadow-inner">
+                <i class="fa-solid fa-cube text-4xl text-amber-400 group-hover:scale-110 transition-transform"></i>
+              </div>
+              <span class="text-[11px] text-amber-300 font-mono font-bold tracking-wider uppercase">TOYBOX SEARCHER</span>
             </div>
           </div>
         </div>
